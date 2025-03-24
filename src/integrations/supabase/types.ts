@@ -9,7 +9,134 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      connection_logs: {
+        Row: {
+          connected_at: string
+          device_name: string | null
+          disconnected_at: string | null
+          id: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          connected_at?: string
+          device_name?: string | null
+          disconnected_at?: string | null
+          id?: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          connected_at?: string
+          device_name?: string | null
+          disconnected_at?: string | null
+          id?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      error_codes: {
+        Row: {
+          cleared_at: string | null
+          code: string
+          description: string | null
+          id: string
+          recorded_at: string
+          user_id: string
+        }
+        Insert: {
+          cleared_at?: string | null
+          code: string
+          description?: string | null
+          id?: string
+          recorded_at?: string
+          user_id: string
+        }
+        Update: {
+          cleared_at?: string | null
+          code?: string
+          description?: string | null
+          id?: string
+          recorded_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      obd_readings: {
+        Row: {
+          battery_voltage: number | null
+          boost_pressure: number | null
+          connection_id: string | null
+          engine_load: number | null
+          engine_temp: number | null
+          fuel_consumption: number | null
+          id: string
+          intake_temp: number | null
+          map_pressure: number | null
+          recorded_at: string
+          rpm: number | null
+          speed: number | null
+          user_id: string
+        }
+        Insert: {
+          battery_voltage?: number | null
+          boost_pressure?: number | null
+          connection_id?: string | null
+          engine_load?: number | null
+          engine_temp?: number | null
+          fuel_consumption?: number | null
+          id?: string
+          intake_temp?: number | null
+          map_pressure?: number | null
+          recorded_at?: string
+          rpm?: number | null
+          speed?: number | null
+          user_id: string
+        }
+        Update: {
+          battery_voltage?: number | null
+          boost_pressure?: number | null
+          connection_id?: string | null
+          engine_load?: number | null
+          engine_temp?: number | null
+          fuel_consumption?: number | null
+          id?: string
+          intake_temp?: number | null
+          map_pressure?: number | null
+          recorded_at?: string
+          rpm?: number | null
+          speed?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "obd_readings_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "connection_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
