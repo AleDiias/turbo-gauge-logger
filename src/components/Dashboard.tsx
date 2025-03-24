@@ -20,22 +20,22 @@ const mockData = [
 const Dashboard: React.FC = () => {
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-8 text-center">Car Monitor Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-8 text-center">Painel de Monitoramento do Veículo</h1>
       
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid grid-cols-4 mb-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="connection">Connection</TabsTrigger>
-          <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="connection">Conexão</TabsTrigger>
+          <TabsTrigger value="diagnostics">Diagnósticos</TabsTrigger>
+          <TabsTrigger value="history">Histórico</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle>Engine RPM</CardTitle>
-                <CardDescription>Current engine rotation</CardDescription>
+                <CardTitle>RPM do Motor</CardTitle>
+                <CardDescription>Rotação atual do motor</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-4xl font-bold">0 RPM</div>
@@ -55,8 +55,8 @@ const Dashboard: React.FC = () => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle>Speed</CardTitle>
-                <CardDescription>Current vehicle speed</CardDescription>
+                <CardTitle>Velocidade</CardTitle>
+                <CardDescription>Velocidade atual do veículo</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-4xl font-bold">0 km/h</div>
@@ -76,8 +76,8 @@ const Dashboard: React.FC = () => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle>Engine Temperature</CardTitle>
-                <CardDescription>Current engine temperature</CardDescription>
+                <CardTitle>Temperatura do Motor</CardTitle>
+                <CardDescription>Temperatura atual do motor</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-4xl font-bold">0 °C</div>
@@ -98,16 +98,16 @@ const Dashboard: React.FC = () => {
           
           <Card>
             <CardHeader>
-              <CardTitle>Connection Status</CardTitle>
-              <CardDescription>Current OBD connection status</CardDescription>
+              <CardTitle>Status da Conexão</CardTitle>
+              <CardDescription>Status atual da conexão OBD</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="text-lg">
                   <span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
-                  Not Connected
+                  Não Conectado
                 </div>
-                <Button>Connect to OBD</Button>
+                <Button>Conectar ao OBD</Button>
               </div>
             </CardContent>
           </Card>
@@ -120,22 +120,22 @@ const Dashboard: React.FC = () => {
         <TabsContent value="diagnostics" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Diagnostic Trouble Codes</CardTitle>
-              <CardDescription>Check for diagnostic trouble codes (DTCs)</CardDescription>
+              <CardTitle>Códigos de Falha</CardTitle>
+              <CardDescription>Verificar códigos de diagnóstico de falha (DTCs)</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-end">
-                  <Button className="mr-2">Read DTCs</Button>
-                  <Button variant="outline">Clear DTCs</Button>
+                  <Button className="mr-2">Ler Códigos</Button>
+                  <Button variant="outline">Limpar Códigos</Button>
                 </div>
                 
                 <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
                   <div className="p-2 bg-slate-700">
-                    <h3 className="font-medium">No Trouble Codes Found</h3>
+                    <h3 className="font-medium">Nenhum Código de Falha Encontrado</h3>
                   </div>
                   <div className="p-4 text-center text-slate-400">
-                    Connect to your vehicle and click "Read DTCs" to check for trouble codes
+                    Conecte-se ao seu veículo e clique em "Ler Códigos" para verificar códigos de falha
                   </div>
                 </div>
               </div>
@@ -146,13 +146,13 @@ const Dashboard: React.FC = () => {
         <TabsContent value="history" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Connection History</CardTitle>
-              <CardDescription>Previous connections to your vehicle</CardDescription>
+              <CardTitle>Histórico de Conexões</CardTitle>
+              <CardDescription>Conexões anteriores ao seu veículo</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
                 <div className="p-4 text-center text-slate-400">
-                  No previous connections found
+                  Nenhuma conexão anterior encontrada
                 </div>
               </div>
             </CardContent>
@@ -160,13 +160,13 @@ const Dashboard: React.FC = () => {
           
           <Card>
             <CardHeader>
-              <CardTitle>Diagnostic History</CardTitle>
-              <CardDescription>Previously detected diagnostic trouble codes</CardDescription>
+              <CardTitle>Histórico de Diagnósticos</CardTitle>
+              <CardDescription>Códigos de diagnóstico de falha detectados anteriormente</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
                 <div className="p-4 text-center text-slate-400">
-                  No diagnostic history found
+                  Nenhum histórico de diagnóstico encontrado
                 </div>
               </div>
             </CardContent>

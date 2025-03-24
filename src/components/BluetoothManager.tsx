@@ -19,14 +19,14 @@ const BluetoothManager: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Bluetooth Connection</h2>
+        <h2 className="text-xl font-semibold">Conexão Bluetooth</h2>
         {!isScanning ? (
           <Button onClick={startScan} disabled={isScanning}>
-            Scan for Devices
+            Buscar Dispositivos
           </Button>
         ) : (
           <Button variant="outline" disabled>
-            Scanning...
+            Buscando...
           </Button>
         )}
       </div>

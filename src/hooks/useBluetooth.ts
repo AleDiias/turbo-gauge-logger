@@ -13,14 +13,14 @@ export const useBluetooth = () => {
       try {
         await BleClient.initialize();
         toast({
-          title: "Bluetooth Initialized",
-          description: "Bluetooth is ready to use",
+          title: "Bluetooth Inicializado",
+          description: "Bluetooth está pronto para uso",
         });
       } catch (error) {
-        console.error('Error initializing Bluetooth:', error);
+        console.error('Erro ao inicializar Bluetooth:', error);
         toast({
-          title: "Bluetooth Error",
-          description: "Failed to initialize Bluetooth",
+          title: "Erro de Bluetooth",
+          description: "Falha ao inicializar Bluetooth",
           variant: "destructive",
         });
       }
@@ -29,14 +29,14 @@ export const useBluetooth = () => {
     initializeBluetooth();
 
     return () => {
-      // Cleanup function
+      // Função de limpeza
       const cleanup = async () => {
         try {
           if (connectedDevice) {
             await BleClient.disconnect(connectedDevice.device.deviceId);
           }
         } catch (error) {
-          console.error('Error disconnecting:', error);
+          console.error('Erro ao desconectar:', error);
         }
       };
       
@@ -51,13 +51,13 @@ export const useBluetooth = () => {
       
       await BleClient.requestLEScan(
         {
-          services: [], // Scan for all services
-          namePrefix: 'ELM', // Look for devices with "ELM" in the name
+          services: [], // Procurar por todos os serviços
+          namePrefix: 'ELM', // Procurar por dispositivos com "ELM" no nome
           allowDuplicates: false,
         },
         (result) => {
           setDevices((prevDevices) => {
-            // Check if device already exists in the list
+            // Verificar se o dispositivo já existe na lista
             const exists = prevDevices.some(
               (device) => device.device.deviceId === result.device.deviceId
             );
@@ -70,25 +70,25 @@ export const useBluetooth = () => {
         }
       );
 
-      // Stop scanning after 10 seconds
+      // Parar a busca após 10 segundos
       setTimeout(async () => {
         try {
           await BleClient.stopLEScan();
           setIsScanning(false);
           toast({
-            title: "Scan Complete",
-            description: `Found ${devices.length} devices`,
+            title: "Busca Concluída",
+            description: `Encontrado(s) ${devices.length} dispositivo(s)`,
           });
         } catch (error) {
-          console.error('Error stopping scan:', error);
+          console.error('Erro ao parar a busca:', error);
         }
       }, 10000);
     } catch (error) {
-      console.error('Error starting scan:', error);
+      console.error('Erro ao iniciar a busca:', error);
       setIsScanning(false);
       toast({
-        title: "Scan Error",
-        description: "Failed to start scanning for devices",
+        title: "Erro na Busca",
+        description: "Falha ao iniciar a busca por dispositivos",
         variant: "destructive",
       });
     }
@@ -99,14 +99,14 @@ export const useBluetooth = () => {
       await BleClient.connect(device.device.deviceId);
       setConnectedDevice(device);
       toast({
-        title: "Connected",
-        description: `Connected to ${device.device.name || device.device.deviceId}`,
+        title: "Conectado",
+        description: `Conectado a ${device.device.name || device.device.deviceId}`,
       });
     } catch (error) {
-      console.error('Error connecting to device:', error);
+      console.error('Erro ao conectar ao dispositivo:', error);
       toast({
-        title: "Connection Error",
-        description: "Failed to connect to the device",
+        title: "Erro de Conexão",
+        description: "Falha ao conectar ao dispositivo",
         variant: "destructive",
       });
     }
@@ -119,14 +119,14 @@ export const useBluetooth = () => {
       await BleClient.disconnect(connectedDevice.device.deviceId);
       setConnectedDevice(null);
       toast({
-        title: "Disconnected",
-        description: "Device disconnected successfully",
+        title: "Desconectado",
+        description: "Dispositivo desconectado com sucesso",
       });
     } catch (error) {
-      console.error('Error disconnecting from device:', error);
+      console.error('Erro ao desconectar do dispositivo:', error);
       toast({
-        title: "Disconnection Error",
-        description: "Failed to disconnect from the device",
+        title: "Erro de Desconexão",
+        description: "Falha ao desconectar do dispositivo",
         variant: "destructive",
       });
     }
