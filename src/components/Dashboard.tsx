@@ -6,15 +6,16 @@ import { Button } from "@/components/ui/button";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import BluetoothManager from './BluetoothManager';
 import { supabase } from "@/integrations/supabase/client";
+import { DigitalDisplay } from './DigitalDisplay';
 
 const mockData = [
-  { time: '00:00', rpm: 800, speed: 0, temp: 70 },
-  { time: '00:05', rpm: 1200, speed: 20, temp: 75 },
-  { time: '00:10', rpm: 2500, speed: 45, temp: 83 },
-  { time: '00:15', rpm: 3000, speed: 60, temp: 87 },
-  { time: '00:20', rpm: 2000, speed: 40, temp: 85 },
-  { time: '00:25', rpm: 1500, speed: 30, temp: 82 },
-  { time: '00:30', rpm: 800, speed: 0, temp: 78 },
+  { time: '00:00', rpm: 0, speed: 0, temp: 0 },
+  { time: '00:05', rpm: 0, speed: 0, temp: 0 },
+  { time: '00:10', rpm: 0, speed: 0, temp: 0 },
+  { time: '00:15', rpm: 0, speed: 0, temp: 0 },
+  { time: '00:20', rpm: 0, speed: 0, temp: 0 },
+  { time: '00:25', rpm: 0, speed: 0, temp: 0 },
+  { time: '00:30', rpm: 0, speed: 0, temp: 0 },
 ];
 
 const Dashboard: React.FC = () => {
@@ -38,8 +39,8 @@ const Dashboard: React.FC = () => {
                 <CardDescription>Rotação atual do motor</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-bold">0 RPM</div>
-                <div className="h-[150px] mt-2">
+                <DigitalDisplay value="0" unit="RPM" />
+                <div className="h-[150px] mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={mockData}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -59,8 +60,8 @@ const Dashboard: React.FC = () => {
                 <CardDescription>Velocidade atual do veículo</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-bold">0 km/h</div>
-                <div className="h-[150px] mt-2">
+                <DigitalDisplay value="0" unit="km/h" />
+                <div className="h-[150px] mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={mockData}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -80,8 +81,8 @@ const Dashboard: React.FC = () => {
                 <CardDescription>Temperatura atual do motor</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-bold">0 °C</div>
-                <div className="h-[150px] mt-2">
+                <DigitalDisplay value="0" unit="°C" />
+                <div className="h-[150px] mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={mockData}>
                       <CartesianGrid strokeDasharray="3 3" />
