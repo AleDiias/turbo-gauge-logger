@@ -38,16 +38,16 @@ const Dashboard: React.FC = () => {
                 <CardTitle>RPM do Motor</CardTitle>
                 <CardDescription>Rotação atual do motor</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <DigitalDisplay value="0" unit="RPM" />
-                <div className="h-[150px] mt-4">
+                <div className="w-full h-[180px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={mockData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="time" />
                       <YAxis />
                       <Tooltip />
-                      <Line type="monotone" dataKey="rpm" stroke="#8884d8" activeDot={{ r: 8 }} />
+                      <Line type="monotone" dataKey="rpm" stroke="#1EAEDB" activeDot={{ r: 8 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -59,16 +59,16 @@ const Dashboard: React.FC = () => {
                 <CardTitle>Velocidade</CardTitle>
                 <CardDescription>Velocidade atual do veículo</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <DigitalDisplay value="0" unit="km/h" />
-                <div className="h-[150px] mt-4">
+                <div className="w-full h-[180px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={mockData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="time" />
                       <YAxis />
                       <Tooltip />
-                      <Line type="monotone" dataKey="speed" stroke="#82ca9d" activeDot={{ r: 8 }} />
+                      <Line type="monotone" dataKey="speed" stroke="#1EAEDB" activeDot={{ r: 8 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -80,16 +80,16 @@ const Dashboard: React.FC = () => {
                 <CardTitle>Temperatura do Motor</CardTitle>
                 <CardDescription>Temperatura atual do motor</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <DigitalDisplay value="0" unit="°C" />
-                <div className="h-[150px] mt-4">
+                <div className="w-full h-[180px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={mockData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="time" />
                       <YAxis />
                       <Tooltip />
-                      <Line type="monotone" dataKey="temp" stroke="#ff7300" activeDot={{ r: 8 }} />
+                      <Line type="monotone" dataKey="temp" stroke="#1EAEDB" activeDot={{ r: 8 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
