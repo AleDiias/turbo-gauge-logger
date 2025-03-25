@@ -3,6 +3,21 @@ import { useState, useEffect } from 'react';
 import { BleClient, ScanResult } from '@capacitor-community/bluetooth-le';
 import { toast } from "@/components/ui/use-toast";
 
+// Define a more compatible ScanResult type for our simulation
+type SimplifiedScanResult = {
+  device: {
+    deviceId: string;
+    name?: string;
+  };
+  rssi: number;
+  txPower?: number;
+  manufacturerData: { [key: string]: DataView };
+  serviceData: { [key: string]: DataView };
+  serviceUUIDs: string[];
+  localName?: string;
+  rawAdvertisement: DataView;
+};
+
 export const useBluetooth = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [devices, setDevices] = useState<ScanResult[]>([]);
@@ -76,7 +91,8 @@ export const useBluetooth = () => {
       
       // Simular alguns dispositivos após um pequeno atraso
       setTimeout(() => {
-        const mockDevices: ScanResult[] = [
+        const emptyArrayBuffer = new ArrayBuffer(0);
+        const mockDevices: SimplifiedScanResult[] = [
           {
             device: {
               deviceId: "mock-elm327-1",
@@ -84,11 +100,11 @@ export const useBluetooth = () => {
             },
             rssi: -70,
             txPower: undefined,
-            manufacturerData: new Map(),
-            serviceData: new Map(),
+            manufacturerData: {},
+            serviceData: {},
             serviceUUIDs: [],
             localName: "ELM327",
-            rawAdvertisement: new DataView(new ArrayBuffer(0)),
+            rawAdvertisement: new DataView(emptyArrayBuffer),
           },
           {
             device: {
@@ -97,15 +113,15 @@ export const useBluetooth = () => {
             },
             rssi: -65,
             txPower: undefined,
-            manufacturerData: new Map(),
-            serviceData: new Map(),
+            manufacturerData: {},
+            serviceData: {},
             serviceUUIDs: [],
             localName: "ELM327 BT",
-            rawAdvertisement: new DataView(new ArrayBuffer(0)),
+            rawAdvertisement: new DataView(emptyArrayBuffer),
           }
         ];
         
-        setDevices(mockDevices);
+        setDevices(mockDevices as unknown as ScanResult[]);
         setIsScanning(false);
         toast({
           title: "Busca Simulada Concluída",
