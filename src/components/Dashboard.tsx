@@ -21,7 +21,7 @@ const mockData = [
 const Dashboard: React.FC = () => {
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-8 text-center">Painel de Monitoramento do Veículo</h1>
+      <h1 className="text-3xl font-bold mb-8 text-center">Asgard App</h1>
       
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid grid-cols-4 mb-6">
@@ -133,7 +133,7 @@ const Dashboard: React.FC = () => {
                 
                 <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
                   <div className="p-2 bg-slate-700">
-                    <h3 className="font-medium">Nenhum Código de Falha Encontrado</h3>
+                    <h3 className="font-medium text-white">Nenhum Código de Falha Encontrado</h3>
                   </div>
                   <div className="p-4 text-center text-slate-400">
                     Conecte-se ao seu veículo e clique em "Ler Códigos" para verificar códigos de falha
