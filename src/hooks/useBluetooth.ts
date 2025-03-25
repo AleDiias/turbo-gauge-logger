@@ -7,8 +7,26 @@ export const useBluetooth = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [devices, setDevices] = useState<ScanResult[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<ScanResult | null>(null);
+  const [isBrowserEnvironment, setIsBrowserEnvironment] = useState(false);
 
   useEffect(() => {
+    // Check if we're in a browser environment without full Bluetooth capabilities
+    const checkEnvironment = async () => {
+      try {
+        // This is a simple check to see if we're in a browser environment
+        // In a mobile environment with Capacitor, this would be available
+        if (typeof window !== 'undefined' && 
+            (!navigator.bluetooth || 
+             !navigator.bluetooth.getAvailability || 
+             !(await navigator.bluetooth.getAvailability()))) {
+          setIsBrowserEnvironment(true);
+        }
+      } catch (error) {
+        console.log('Running in browser environment or Bluetooth not available');
+        setIsBrowserEnvironment(true);
+      }
+    };
+
     const initializeBluetooth = async () => {
       try {
         await BleClient.initialize();
@@ -23,10 +41,14 @@ export const useBluetooth = () => {
           description: "Falha ao inicializar Bluetooth",
           variant: "destructive",
         });
+        setIsBrowserEnvironment(true);
       }
     };
 
-    initializeBluetooth();
+    checkEnvironment();
+    if (!isBrowserEnvironment) {
+      initializeBluetooth();
+    }
 
     return () => {
       // Função de limpeza
@@ -40,11 +62,60 @@ export const useBluetooth = () => {
         }
       };
       
-      cleanup();
+      if (!isBrowserEnvironment) {
+        cleanup();
+      }
     };
-  }, [connectedDevice]);
+  }, [connectedDevice, isBrowserEnvironment]);
 
   const startScan = async () => {
+    if (isBrowserEnvironment) {
+      // Modo de simulação para desenvolvimento web
+      setIsScanning(true);
+      setDevices([]);
+      
+      // Simular alguns dispositivos após um pequeno atraso
+      setTimeout(() => {
+        const mockDevices: ScanResult[] = [
+          {
+            device: {
+              deviceId: "mock-elm327-1",
+              name: "ELM327 OBD Scanner",
+            },
+            rssi: -70,
+            txPower: undefined,
+            manufacturerData: new Map(),
+            serviceData: new Map(),
+            serviceUUIDs: [],
+            localName: "ELM327",
+            rawAdvertisement: new DataView(new ArrayBuffer(0)),
+          },
+          {
+            device: {
+              deviceId: "mock-elm327-2",
+              name: "ELM327 Bluetooth OBD2",
+            },
+            rssi: -65,
+            txPower: undefined,
+            manufacturerData: new Map(),
+            serviceData: new Map(),
+            serviceUUIDs: [],
+            localName: "ELM327 BT",
+            rawAdvertisement: new DataView(new ArrayBuffer(0)),
+          }
+        ];
+        
+        setDevices(mockDevices);
+        setIsScanning(false);
+        toast({
+          title: "Busca Simulada Concluída",
+          description: "Dispositivos de exemplo encontrados (modo de simulação)",
+        });
+      }, 2000);
+      
+      return;
+    }
+    
     try {
       setIsScanning(true);
       setDevices([]);
@@ -95,6 +166,16 @@ export const useBluetooth = () => {
   };
 
   const connectToDevice = async (device: ScanResult) => {
+    if (isBrowserEnvironment) {
+      // Simular conexão em modo de desenvolvimento web
+      setConnectedDevice(device);
+      toast({
+        title: "Conectado (Simulado)",
+        description: `Conectado a ${device.device.name || device.device.deviceId} (modo de simulação)`,
+      });
+      return;
+    }
+    
     try {
       await BleClient.connect(device.device.deviceId);
       setConnectedDevice(device);
@@ -114,6 +195,16 @@ export const useBluetooth = () => {
 
   const disconnectDevice = async () => {
     if (!connectedDevice) return;
+    
+    if (isBrowserEnvironment) {
+      // Simular desconexão em modo de desenvolvimento web
+      setConnectedDevice(null);
+      toast({
+        title: "Desconectado (Simulado)",
+        description: "Dispositivo desconectado (modo de simulação)",
+      });
+      return;
+    }
     
     try {
       await BleClient.disconnect(connectedDevice.device.deviceId);
@@ -136,6 +227,7 @@ export const useBluetooth = () => {
     isScanning,
     devices,
     connectedDevice,
+    isBrowserEnvironment,
     startScan,
     connectToDevice,
     disconnectDevice

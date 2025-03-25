@@ -7,6 +7,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import BluetoothManager from './BluetoothManager';
 import { supabase } from "@/integrations/supabase/client";
 import { DigitalDisplay } from './DigitalDisplay';
+import { useBluetooth } from '@/hooks/useBluetooth';
 
 const mockData = [
   { time: '00:00', rpm: 0, speed: 0, temp: 0 },
@@ -19,6 +20,10 @@ const mockData = [
 ];
 
 const Dashboard: React.FC = () => {
+  const { connectedDevice } = useBluetooth();
+  
+  const isConnected = !!connectedDevice;
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-8 text-center">Asgard App</h1>
@@ -105,10 +110,12 @@ const Dashboard: React.FC = () => {
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="text-lg">
-                  <span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
-                  Não Conectado
+                  <span className={`inline-block w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} mr-2`}></span>
+                  {isConnected ? 'Conectado' : 'Não Conectado'}
                 </div>
-                <Button>Conectar ao OBD</Button>
+                <Button onClick={() => document.querySelector('[value="connection"]')?.dispatchEvent(new Event('click'))}>
+                  {isConnected ? 'Gerenciar Conexão' : 'Conectar ao OBD'}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -127,8 +134,8 @@ const Dashboard: React.FC = () => {
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-end">
-                  <Button className="mr-2">Ler Códigos</Button>
-                  <Button variant="outline">Limpar Códigos</Button>
+                  <Button className="mr-2" disabled={!isConnected}>Ler Códigos</Button>
+                  <Button variant="outline" disabled={!isConnected}>Limpar Códigos</Button>
                 </div>
                 
                 <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
