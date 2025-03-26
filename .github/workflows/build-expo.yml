@@ -36,6 +36,9 @@ jobs:
       - name: Verificar Instalação Expo
         run: npx expo-doctor
 
+      - name: Autenticar EAS CLI
+        run: echo "${{ secrets.EXPO_TOKEN }}" | eas login --non-interactive
+        
       - name: Compilar App para Android (APK)
         run: eas build --platform android --profile preview --non-interactive --local
         env:
@@ -46,4 +49,3 @@ jobs:
         with:
           name: android-apk
           path: ./build/*.apk
-
