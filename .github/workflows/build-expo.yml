@@ -1,9 +1,11 @@
+
 name: Build Expo Android App
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:  # Permite execução manual do workflow
 
 jobs:
   build:
@@ -19,20 +21,20 @@ jobs:
         with:
           node-version: 18
 
-      - name: Instalar Expo CLI
-        run: npm install -g expo-cli
-
       - name: Instalar Dependências
         run: npm install
 
-      - name: Verificar Expo
+      - name: Configurar Expo
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Verificar Instalação Expo
         run: npx expo doctor
 
-      - name: Login no Expo
-        run: npx expo login -u ${{ secrets.EXPO_USERNAME }} -p ${{ secrets.EXPO_PASSWORD }}
-
       - name: Compilar App para Android (APK)
-        run: npx eas build --platform android --profile production --non-interactive
+        run: npx eas build --platform android --profile preview --non-interactive --local
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
@@ -40,4 +42,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: dist/*.apk
+          path: ./build/*.apk
