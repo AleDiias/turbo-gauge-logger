@@ -31,7 +31,7 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Verificar Instalação Expo
-        run: npx expo doctor
+        run: npx expo-doctor
 
       - name: Compilar App para Android (APK)
         run: npx eas build --platform android --profile preview --non-interactive --local
