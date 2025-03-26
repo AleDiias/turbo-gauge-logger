@@ -24,6 +24,9 @@ jobs:
       - name: Instalar Dependências
         run: npm install
 
+      - name: Instalar EAS CLI Globalmente
+        run: npm install -g eas-cli
+
       - name: Configurar Expo
         uses: expo/expo-github-action@v8
         with:
@@ -34,7 +37,7 @@ jobs:
         run: npx expo-doctor
 
       - name: Compilar App para Android (APK)
-        run: npx eas build --platform android --profile preview --non-interactive --local
+        run: eas build --platform android --profile preview --non-interactive --local
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
@@ -43,3 +46,4 @@ jobs:
         with:
           name: android-apk
           path: ./build/*.apk
+
