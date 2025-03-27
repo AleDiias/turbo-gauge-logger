@@ -20,27 +20,33 @@ const config: CapacitorConfig = {
         cancel: "Cancelar",
         availableDevices: "Dispositivos Disponíveis",
         noDeviceFound: "Nenhum dispositivo ELM327 encontrado",
-        connecting: "Conectando...",
-        connected: "Conectado",
-        disconnected: "Desconectado",
-        error: "Erro ao conectar"
+        connecting: "Conectando ao dispositivo...",
+        connected: "Dispositivo conectado",
+        disconnected: "Dispositivo desconectado",
+        error: "Erro na conexão"
       },
-      scanMode: 2,
-      scanTimeout: 5000,
+      scanMode: 1,
+      scanTimeout: 3000,
       allowDuplicates: false,
       autoConnect: false,
       autoDisconnect: true,
+      stopScanAfterConnect: true,
+      connectTimeout: 10000,
       filters: [
         {
+          services: ["FFE0"],
           name: "ELM327",
           namePrefix: "OBDII"
         }
       ],
       android: {
-        scanMode: 2,
-        scanTimeout: 5000,
+        scanMode: 1,
+        scanTimeout: 3000,
         autoConnect: false,
-        autoDisconnect: true
+        autoDisconnect: true,
+        stopScanOnConnect: true,
+        showNotification: false,
+        powerLevel: "high"
       }
     }
   },
