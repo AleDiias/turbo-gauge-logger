@@ -18,33 +18,29 @@ const BluetoothManager: React.FC = () => {
     disconnectDevice 
   } = useBluetooth();
 
+  // Efeito para manter a conexão Bluetooth ativa
   useEffect(() => {
-    // Manter o componente vivo mesmo quando não estiver visível
-    // para prevenir desconexão ao trocar de aba
     const keepAlive = () => {
-      console.log('Mantendo conexão Bluetooth ativa');
+      if (connectedDevice) {
+        console.log('Mantendo conexão Bluetooth ativa');
+      }
     };
     
     const interval = setInterval(keepAlive, 5000);
-    
-    // Definir uma flag global para indicar que o componente está montado
-    // e não deve desconectar o BLE quando muda de tela
     window.__bluetoothManagerMounted = true;
     
     return () => {
       clearInterval(interval);
-      // Apenas remover a flag se o componente estiver realmente desmontando
-      // e não apenas tornando-se invisível ao mudar de aba
       if (document.visibilityState !== 'hidden') {
         window.__bluetoothManagerMounted = false;
       }
     };
-  }, []);
+  }, [connectedDevice]);
 
-  // Esse efeito lida com mudanças de visibilidade da página
+  // Efeito para lidar com mudanças de visibilidade
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && connectedDevice) {
         console.log('Página visível novamente, garantindo que a conexão Bluetooth está mantida');
       }
     };
@@ -54,7 +50,14 @@ const BluetoothManager: React.FC = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [connectedDevice]);
+
+  // Renderização condicional dos componentes
+  const renderDevicesList = () => {
+    if (connectedDevice) return null;
+    if (devices.length === 0) return null;
+    return <DevicesList devices={devices} onConnect={connectToDevice} />;
+  };
 
   return (
     <div className="space-y-4">
@@ -73,7 +76,7 @@ const BluetoothManager: React.FC = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Conexão Bluetooth</h2>
         {!isScanning && !connectedDevice ? (
-          <Button onClick={startScan} disabled={isScanning}>
+          <Button onClick={startScan} disabled={isScanning || !!connectedDevice}>
             Buscar Dispositivos
           </Button>
         ) : null}
@@ -86,15 +89,15 @@ const BluetoothManager: React.FC = () => {
         />
       )}
 
-      {devices.length > 0 && !connectedDevice && (
-        <DevicesList devices={devices} onConnect={connectToDevice} />
-      )}
+      {renderDevicesList()}
 
-      <ScanningStatus 
-        isScanning={isScanning} 
-        devicesCount={devices.length} 
-        connectedDevice={connectedDevice}
-      />
+      {!connectedDevice && (
+        <ScanningStatus 
+          isScanning={isScanning} 
+          devicesCount={devices.length} 
+          connectedDevice={connectedDevice}
+        />
+      )}
     </div>
   );
 };

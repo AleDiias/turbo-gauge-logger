@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ScanResult } from '@capacitor-community/bluetooth-le';
+import { BleClient, ScanResult } from '@capacitor-community/bluetooth-le';
 import { BluetoothHook } from './bluetooth/types';
 import { 
   simulateScan, 
@@ -23,8 +23,8 @@ export const useBluetooth = (): BluetoothHook => {
   const [isBrowserEnvironment, setIsBrowserEnvironment] = useState(false);
   const [lastConnectedDevice, setLastConnectedDevice] = useState<ScanResult | null>(null);
 
+  // Efeito para inicialização e limpeza
   useEffect(() => {
-    // Check environment and initialize Bluetooth
     const setup = async () => {
       const isSimulated = await checkBluetoothEnvironment();
       setIsBrowserEnvironment(isSimulated);
@@ -32,7 +32,6 @@ export const useBluetooth = (): BluetoothHook => {
       if (!isSimulated) {
         await initializeBluetooth();
         
-        // Tentar reconectar ao último dispositivo
         const savedDeviceJson = localStorage.getItem('lastConnectedDevice');
         if (savedDeviceJson) {
           try {
@@ -49,25 +48,20 @@ export const useBluetooth = (): BluetoothHook => {
     
     setup();
 
-    // Não desconecte ao mudar de aba, apenas ao desmontar o componente completamente
     return () => {
-      // Verificar se o componente BluetoothManager ainda está montado
-      // ou se apenas a página está mudando de visibilidade
       if (!window.__bluetoothManagerMounted && !isBrowserEnvironment && connectedDevice) {
         console.log('Componente completamente desmontado, desconectando Bluetooth');
         cleanupBluetoothConnection(connectedDevice.device.deviceId);
-      } else {
-        console.log('Mantendo conexão Bluetooth ativa mesmo ao mudar de aba');
       }
     };
-  }, [connectedDevice, isBrowserEnvironment, lastConnectedDevice]);
+  }, [connectedDevice, isBrowserEnvironment]);
 
-  // Atualizar o último dispositivo conectado quando houver uma conexão
+  // Efeito para gerenciar o estado de conexão
   useEffect(() => {
     if (connectedDevice) {
       setLastConnectedDevice(connectedDevice);
-      setIsScanning(false); // Garantir que o scanning seja interrompido quando conectado
-      // Salvar no localStorage para autoconexão futura
+      setIsScanning(false);
+      setDevices([]); // Limpar lista de dispositivos quando conectado
       try {
         localStorage.setItem('lastConnectedDevice', JSON.stringify(connectedDevice));
       } catch (e) {
@@ -76,7 +70,24 @@ export const useBluetooth = (): BluetoothHook => {
     }
   }, [connectedDevice]);
 
+  // Efeito para parar o scanning quando um dispositivo for conectado
+  useEffect(() => {
+    if (connectedDevice && isScanning) {
+      const stopScan = async () => {
+        try {
+          await BleClient.stopLEScan();
+        } catch (e) {
+          console.log('Scanning já estava parado');
+        }
+        setIsScanning(false);
+      };
+      stopScan();
+    }
+  }, [connectedDevice, isScanning]);
+
   const startScan = async () => {
+    if (connectedDevice) return; // Não iniciar scan se já estiver conectado
+    
     if (isBrowserEnvironment) {
       simulateScan(setIsScanning, setDevices);
       return;
@@ -86,6 +97,8 @@ export const useBluetooth = (): BluetoothHook => {
   };
 
   const connectToDevice = async (device: ScanResult) => {
+    if (connectedDevice) return; // Não conectar se já estiver conectado
+    
     if (isBrowserEnvironment) {
       simulateConnection(device, setConnectedDevice);
       setIsScanning(false);
@@ -105,6 +118,7 @@ export const useBluetooth = (): BluetoothHook => {
     
     await disconnectFromBluetoothDevice(connectedDevice.device.deviceId, setConnectedDevice);
     setIsScanning(false);
+    setDevices([]); // Limpar lista de dispositivos ao desconectar
   };
 
   return {
