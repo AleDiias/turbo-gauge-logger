@@ -101,24 +101,6 @@ const Dashboard: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Status da Conexão</CardTitle>
-              <CardDescription>Status atual da conexão OBD</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-lg">
-                  <span className={`inline-block w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} mr-2`}></span>
-                  {isConnected ? 'Conectado' : 'Não Conectado'}
-                </div>
-                <Button onClick={() => document.querySelector('[value="connection"]')?.dispatchEvent(new Event('click'))}>
-                  {isConnected ? 'Gerenciar Conexão' : 'Conectar ao OBD'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
         
         <TabsContent value="connection" className="space-y-4">

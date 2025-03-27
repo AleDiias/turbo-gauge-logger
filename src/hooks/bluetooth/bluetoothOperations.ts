@@ -35,7 +35,6 @@ export const startBluetoothScan = async (
     await BleClient.requestLEScan(
       {
         services: [], // Procurar por todos os serviços
-        namePrefix: 'ELM', // Procurar por dispositivos com "ELM" no nome
         allowDuplicates: false,
       },
       (result) => {
@@ -58,9 +57,22 @@ export const startBluetoothScan = async (
       try {
         await BleClient.stopLEScan();
         setIsScanning(false);
-        toast({
-          title: "Busca Concluída",
-          description: `Encontrado(s) dispositivos`,
+        
+        // Verificar se algum dispositivo foi encontrado
+        setDevices((prevDevices) => {
+          if (prevDevices.length === 0) {
+            toast({
+              title: "Busca Concluída",
+              description: "Nenhum dispositivo encontrado",
+              variant: "default",
+            });
+          } else {
+            toast({
+              title: "Busca Concluída",
+              description: `Encontrado(s) ${prevDevices.length} dispositivo(s)`,
+            });
+          }
+          return prevDevices;
         });
       } catch (error) {
         console.error('Erro ao parar a busca:', error);
@@ -83,6 +95,21 @@ export const connectToBluetoothDevice = async (
   setConnectedDevice: (device: ScanResult | null) => void
 ): Promise<void> => {
   try {
+    // Verificar se o nome do dispositivo contém "ELM" ou "OBD" para identificar adaptadores OBD
+    const deviceName = device.device.name || "";
+    const isOBDAdapter = deviceName.includes("ELM") || 
+                          deviceName.includes("OBD") || 
+                          deviceName.includes("OBDII");
+    
+    if (!isOBDAdapter) {
+      // Aviso para dispositivos que não parecem ser adaptadores OBD
+      toast({
+        title: "Aviso de Compatibilidade",
+        description: "Este dispositivo pode não ser um adaptador OBD-II compatível. Deseja conectar mesmo assim?",
+        variant: "default",
+      });
+    }
+    
     await BleClient.connect(device.device.deviceId);
     setConnectedDevice(device);
     toast({

@@ -10,7 +10,7 @@ const ScanningStatus: React.FC<ScanningStatusProps> = ({ isScanning, devicesCoun
   if (isScanning && devicesCount === 0) {
     return (
       <div className="text-center p-8">
-        <p className="text-slate-400">Procurando por dispositivos ELM327...</p>
+        <p className="text-slate-400">Procurando por dispositivos Bluetooth...</p>
       </div>
     );
   }
@@ -19,6 +19,9 @@ const ScanningStatus: React.FC<ScanningStatusProps> = ({ isScanning, devicesCoun
     return (
       <div className="text-center p-8 border border-dashed border-slate-700 rounded-lg">
         <p className="text-slate-400">Nenhum dispositivo encontrado. Tente buscar novamente.</p>
+        <p className="text-slate-500 mt-2 text-sm">
+          Nota: Certifique-se de que seu adaptador OBD-II está ligado e dentro do alcance.
+        </p>
       </div>
     );
   }
