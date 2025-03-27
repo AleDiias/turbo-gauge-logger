@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -73,15 +72,11 @@ const BluetoothManager: React.FC = () => {
       
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Conexão Bluetooth</h2>
-        {!isScanning ? (
+        {!isScanning && !connectedDevice ? (
           <Button onClick={startScan} disabled={isScanning}>
             Buscar Dispositivos
           </Button>
-        ) : (
-          <Button variant="outline" disabled>
-            Buscando...
-          </Button>
-        )}
+        ) : null}
       </div>
 
       {connectedDevice && (
@@ -95,7 +90,11 @@ const BluetoothManager: React.FC = () => {
         <DevicesList devices={devices} onConnect={connectToDevice} />
       )}
 
-      <ScanningStatus isScanning={isScanning} devicesCount={devices.length} />
+      <ScanningStatus 
+        isScanning={isScanning} 
+        devicesCount={devices.length} 
+        connectedDevice={connectedDevice}
+      />
     </div>
   );
 };

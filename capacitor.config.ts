@@ -16,10 +16,10 @@ const config: CapacitorConfig = {
     },
     BluetoothLe: {
       displayStrings: {
-        scanning: "Procurando dispositivos ELM327...",
+        scanning: "Procurando dispositivos OBD2/ELM327...",
         cancel: "Cancelar",
         availableDevices: "Dispositivos Disponíveis",
-        noDeviceFound: "Nenhum dispositivo ELM327 encontrado",
+        noDeviceFound: "Nenhum dispositivo OBD2/ELM327 encontrado",
         connecting: "Conectando ao dispositivo...",
         connected: "Dispositivo conectado",
         disconnected: "Dispositivo desconectado",

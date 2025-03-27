@@ -1,13 +1,21 @@
-
 import { BleClient, ScanResult } from "@capacitor-community/bluetooth-le";
 import { toast } from "@/components/ui/use-toast";
 
 // Connect to a real Bluetooth device
 export const connectToBluetoothDevice = async (
   device: ScanResult,
-  setConnectedDevice: (device: ScanResult | null) => void
+  setConnectedDevice: (device: ScanResult | null) => void,
+  setIsScanning: (value: boolean) => void
 ): Promise<void> => {
   try {
+    // Garantir que o scanning seja interrompido
+    try {
+      await BleClient.stopLEScan();
+    } catch (e) {
+      console.log('Scanning já estava parado');
+    }
+    setIsScanning(false);
+
     // Verificar se o nome do dispositivo contém "ELM" ou "OBD" para identificar adaptadores OBD
     const deviceName = device.device.name || "";
     const isOBDAdapter = deviceName.includes("ELM") || 
@@ -29,7 +37,7 @@ export const connectToBluetoothDevice = async (
       
       // Tentar reconectar automaticamente quando desconectar inesperadamente
       setTimeout(() => {
-        tryAutoReconnect(device, setConnectedDevice);
+        tryAutoReconnect(device, setConnectedDevice, setIsScanning);
       }, 2000);
     });
     
@@ -49,9 +57,10 @@ export const connectToBluetoothDevice = async (
     });
   } catch (error) {
     console.error('Erro ao conectar ao dispositivo:', error);
+    setIsScanning(false);
     toast({
-      title: "Erro de Conexão",
-      description: "Falha ao conectar ao dispositivo",
+      title: "Erro na Conexão",
+      description: "Não foi possível conectar ao dispositivo. Tente novamente.",
       variant: "destructive",
     });
   }
@@ -60,9 +69,18 @@ export const connectToBluetoothDevice = async (
 // Try to reconnect to the last connected device
 export const tryAutoReconnect = async (
   device: ScanResult,
-  setConnectedDevice: (device: ScanResult | null) => void
+  setConnectedDevice: (device: ScanResult | null) => void,
+  setIsScanning: (value: boolean) => void
 ): Promise<void> => {
   try {
+    // Garantir que o scanning seja interrompido
+    try {
+      await BleClient.stopLEScan();
+    } catch (e) {
+      console.log('Scanning já estava parado');
+    }
+    setIsScanning(false);
+
     console.log('Tentando reconectar a:', device.device.name || device.device.deviceId);
     
     // Verificar se o dispositivo ainda está disponível
@@ -84,7 +102,7 @@ export const tryAutoReconnect = async (
       
       // Tentar reconectar novamente quando desconectar
       setTimeout(() => {
-        tryAutoReconnect(device, setConnectedDevice);
+        tryAutoReconnect(device, setConnectedDevice, setIsScanning);
       }, 2000);
     });
     
@@ -95,6 +113,7 @@ export const tryAutoReconnect = async (
     });
   } catch (error) {
     console.error('Erro ao reconectar ao dispositivo:', error);
+    setIsScanning(false);
   }
 };
 

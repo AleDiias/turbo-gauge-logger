@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ScanResult } from '@capacitor-community/bluetooth-le';
 import { BluetoothHook } from './bluetooth/types';
@@ -40,7 +39,7 @@ export const useBluetooth = (): BluetoothHook => {
             const device = JSON.parse(savedDeviceJson) as ScanResult;
             setLastConnectedDevice(device);
             console.log('Tentando reconectar ao último dispositivo:', device.device.name || device.device.deviceId);
-            tryAutoReconnect(device, setConnectedDevice);
+            tryAutoReconnect(device, setConnectedDevice, setIsScanning);
           } catch (e) {
             console.error('Erro ao restaurar o último dispositivo:', e);
           }
@@ -67,6 +66,7 @@ export const useBluetooth = (): BluetoothHook => {
   useEffect(() => {
     if (connectedDevice) {
       setLastConnectedDevice(connectedDevice);
+      setIsScanning(false); // Garantir que o scanning seja interrompido quando conectado
       // Salvar no localStorage para autoconexão futura
       try {
         localStorage.setItem('lastConnectedDevice', JSON.stringify(connectedDevice));
@@ -88,10 +88,11 @@ export const useBluetooth = (): BluetoothHook => {
   const connectToDevice = async (device: ScanResult) => {
     if (isBrowserEnvironment) {
       simulateConnection(device, setConnectedDevice);
+      setIsScanning(false);
       return;
     }
     
-    await connectToBluetoothDevice(device, setConnectedDevice);
+    await connectToBluetoothDevice(device, setConnectedDevice, setIsScanning);
   };
 
   const disconnectDevice = async () => {
@@ -103,6 +104,7 @@ export const useBluetooth = (): BluetoothHook => {
     }
     
     await disconnectFromBluetoothDevice(connectedDevice.device.deviceId, setConnectedDevice);
+    setIsScanning(false);
   };
 
   return {
