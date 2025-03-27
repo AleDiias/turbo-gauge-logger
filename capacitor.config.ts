@@ -5,9 +5,10 @@ const config: CapacitorConfig = {
   appName: 'Asgard Turbo',
   webDir: 'dist',
   server: {
-    url: "https://turbo.asgardai.com.br/",
+    url: "https://turbo.asgardai.com.br",
     cleartext: true,
-    androidScheme: 'https'
+    androidScheme: 'https',
+    hostname: 'turbo.asgardai.com.br'
   },
   plugins: {
     CapacitorHttp: {
@@ -45,7 +46,9 @@ const config: CapacitorConfig = {
   },
   android: {
     allowMixedContent: true,
-    webContentsDebuggingEnabled: true
+    webContentsDebuggingEnabled: true,
+    initialFocus: true,
+    backgroundColor: '#FFFFFF'
   }
 };
 
