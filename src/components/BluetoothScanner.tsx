@@ -17,6 +17,7 @@ export function BluetoothScanner() {
   const [isScanning, setIsScanning] = useState(false);
   const [devices, setDevices] = useState<Device[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const { connect, disconnect, isConnected, deviceId } = useBluetoothStore();
   const { toast } = useToast();
 
@@ -29,6 +30,18 @@ export function BluetoothScanner() {
 
   const initializeBluetooth = async () => {
     try {
+      setIsInitializing(true);
+      const isEnabled = await BluetoothLe.isEnabled();
+      
+      if (!isEnabled) {
+        toast({
+          title: "Bluetooth Desativado",
+          description: "Por favor, ative o Bluetooth nas configurações do seu dispositivo.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       await BluetoothLe.initialize();
       setIsInitialized(true);
       console.log('Bluetooth inicializado com sucesso');
@@ -39,6 +52,8 @@ export function BluetoothScanner() {
         description: "Não foi possível inicializar o Bluetooth. Verifique se o Bluetooth está ativado.",
         variant: "destructive",
       });
+    } finally {
+      setIsInitializing(false);
     }
   };
 
@@ -167,6 +182,14 @@ export function BluetoothScanner() {
       });
     }
   };
+
+  if (isInitializing) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-gray-500">Inicializando Bluetooth...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
