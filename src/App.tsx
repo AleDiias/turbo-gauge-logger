@@ -11,6 +11,7 @@ import { useDataLoggerStore } from './stores/dataLoggerStore';
 import { useToast } from "@/components/ui/use-toast";
 
 function App() {
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { isConnected, deviceId, deviceName, connect, disconnect } = useBluetoothStore();
   const { 
@@ -28,6 +29,21 @@ function App() {
     clearLogs,
     logs 
   } = useDataLoggerStore();
+
+  useEffect(() => {
+    console.log('Inicializando App...');
+    try {
+      // Aqui você pode adicionar qualquer inicialização necessária
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Erro ao inicializar App:', error);
+      toast({
+        title: "Erro de Inicialização",
+        description: "Não foi possível inicializar o aplicativo.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -82,6 +98,16 @@ function App() {
       }
     };
   }, [isConnected, isLogging, boostPressure, oilPressure, oilTemperature, waterTemperature, logData, toast]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <p className="text-gray-500">Carregando aplicativo...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">

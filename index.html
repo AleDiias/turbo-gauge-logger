@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Monitor de Dados do Veículo</title>
+    <title>Turbo Gauge Logger</title>
     <meta name="description" content="Aplicativo para monitoramento de dados de veículos via OBD" />
     <meta name="author" content="Lovable" />
 
@@ -19,9 +19,22 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="loading-container">
+        <p>Carregando aplicativo...</p>
+      </div>
+    </div>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    <style>
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+    </style>
   </body>
 </html>
