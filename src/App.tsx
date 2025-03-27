@@ -57,13 +57,22 @@ function App() {
 
     if (isConnected && isLogging) {
       interval = setInterval(() => {
-        logData({
-          timestamp: new Date().toISOString(),
-          boostPressure,
-          oilPressure,
-          oilTemperature,
-          waterTemperature
-        });
+        try {
+          logData({
+            timestamp: new Date().toISOString(),
+            boostPressure,
+            oilPressure,
+            oilTemperature,
+            waterTemperature
+          });
+        } catch (error) {
+          console.error('Erro ao registrar dados:', error);
+          toast({
+            title: "Erro",
+            description: "Não foi possível registrar os dados.",
+            variant: "destructive",
+          });
+        }
       }, 1000);
     }
 
@@ -72,7 +81,7 @@ function App() {
         clearInterval(interval);
       }
     };
-  }, [isConnected, isLogging, boostPressure, oilPressure, oilTemperature, waterTemperature, logData]);
+  }, [isConnected, isLogging, boostPressure, oilPressure, oilTemperature, waterTemperature, logData, toast]);
 
   return (
     <div className="container mx-auto p-4">
@@ -128,6 +137,7 @@ function App() {
                   onClick={isLogging ? stopLogging : startLogging}
                   variant={isLogging ? "destructive" : "default"}
                   className="w-32"
+                  disabled={!isConnected}
                 >
                   {isLogging ? 'Parar Log' : 'Iniciar Log'}
                 </Button>

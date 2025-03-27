@@ -16,6 +16,7 @@ interface Device {
 export function BluetoothScanner() {
   const [isScanning, setIsScanning] = useState(false);
   const [devices, setDevices] = useState<Device[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { connect, disconnect, isConnected, deviceId } = useBluetoothStore();
   const { toast } = useToast();
 
@@ -26,12 +27,44 @@ export function BluetoothScanner() {
     );
   };
 
+  const initializeBluetooth = async () => {
+    try {
+      await BluetoothLe.initialize();
+      setIsInitialized(true);
+      console.log('Bluetooth inicializado com sucesso');
+    } catch (error) {
+      console.error('Erro ao inicializar Bluetooth:', error);
+      toast({
+        title: "Erro de Inicialização",
+        description: "Não foi possível inicializar o Bluetooth. Verifique se o Bluetooth está ativado.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    initializeBluetooth();
+    return () => {
+      if (isScanning) {
+        stopScan();
+      }
+    };
+  }, []);
+
   const startScan = async () => {
+    if (!isInitialized) {
+      toast({
+        title: "Bluetooth não inicializado",
+        description: "Aguarde a inicialização do Bluetooth ou tente novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsScanning(true);
       setDevices([]);
       
-      await BluetoothLe.initialize();
       await BluetoothLe.requestLEScan({
         allowDuplicates: true,
         scanMode: 2,
@@ -61,6 +94,7 @@ export function BluetoothScanner() {
         description: "Não foi possível iniciar a busca por dispositivos.",
         variant: "destructive",
       });
+      setIsScanning(false);
     }
   };
 
@@ -134,20 +168,12 @@ export function BluetoothScanner() {
     }
   };
 
-  useEffect(() => {
-    return () => {
-      if (isScanning) {
-        stopScan();
-      }
-    };
-  }, []);
-
   return (
     <div className="space-y-4">
       <div className="flex justify-center gap-2">
         <Button 
           onClick={isScanning ? stopScan : startScan}
-          disabled={isConnected}
+          disabled={isConnected || !isInitialized}
         >
           {isScanning ? 'Parar Busca' : 'Buscar Dispositivos'}
         </Button>
