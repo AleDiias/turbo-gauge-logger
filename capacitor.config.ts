@@ -1,43 +1,26 @@
+
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.turbo.gauge.logger',
-  appName: 'Turbo Gauge Logger',
+  appId: 'app.lovable.4f3a426f003c482d84c59d4f1f612bef',
+  appName: 'turbo-gauge-logger',
   webDir: 'dist',
   server: {
-    url: 'https://turbo.asgardai.com.br',
-    cleartext: true,
-    androidScheme: 'https',
-    allowNavigation: ['turbo.asgardai.com.br', '34.70.177.193'],
-    allowMixedContent: true,
+    url: "https://4f3a426f-003c-482d-84c5-9d4f1f612bef.lovableproject.com?forceHideBadge=true",
+    cleartext: true
   },
   plugins: {
     CapacitorHttp: {
       enabled: true
     },
     BluetoothLe: {
-      displayName: 'Turbo Gauge Logger',
-      displayNameShort: 'Turbo Logger'
+      displayStrings: {
+        scanning: "Scanning for ELM327 devices...",
+        cancel: "Cancel",
+        availableDevices: "Available Devices",
+        noDeviceFound: "No ELM327 devices found"
+      }
     }
-  },
-  android: {
-    buildOptions: {
-      keystorePath: undefined,
-      keystoreAlias: undefined,
-      keystorePassword: undefined,
-      keyPassword: undefined,
-    },
-    icon: {
-      source: 'src/assets/icon-512.png',
-      foreground: 'src/assets/icon-512.png',
-      background: '#FFFFFF',
-      padding: 0.1,
-      adaptiveIcon: {
-        foreground: 'src/assets/icon-512.png',
-        background: '#FFFFFF',
-        padding: 0.1,
-      },
-    },
   }
 };
 
