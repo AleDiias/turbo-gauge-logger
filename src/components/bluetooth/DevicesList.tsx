@@ -16,15 +16,15 @@ const DevicesList: React.FC<DevicesListProps> = ({ devices, onConnect }) => {
   return (
     <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
       <div className="p-2 bg-slate-700">
-        <h3 className="font-medium">Dispositivos Disponíveis</h3>
+        <h3 className="font-medium text-white">Dispositivos Disponíveis</h3>
       </div>
       <ul className="divide-y divide-slate-700">
         {devices.map((device) => (
           <li key={device.device.deviceId} className="p-3 hover:bg-slate-700/50">
             <div className="flex justify-between items-center">
               <div>
-                <p className="font-medium">{device.device.name || "Dispositivo Desconhecido"}</p>
-                <p className="text-xs text-slate-400">{device.device.deviceId}</p>
+                <p className="font-medium text-white">{device.device.name || "Dispositivo Desconhecido"}</p>
+                <p className="text-xs text-slate-300">{device.device.deviceId}</p>
               </div>
               <Button size="sm" onClick={() => onConnect(device)}>
                 Conectar

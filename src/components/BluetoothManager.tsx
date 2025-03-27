@@ -26,10 +26,34 @@ const BluetoothManager: React.FC = () => {
       console.log('Mantendo conexão Bluetooth ativa');
     };
     
-    const interval = setInterval(keepAlive, 10000);
+    const interval = setInterval(keepAlive, 5000);
+    
+    // Definir uma flag global para indicar que o componente está montado
+    // e não deve desconectar o BLE quando muda de tela
+    window.__bluetoothManagerMounted = true;
     
     return () => {
       clearInterval(interval);
+      // Apenas remover a flag se o componente estiver realmente desmontando
+      // e não apenas tornando-se invisível ao mudar de aba
+      if (document.visibilityState !== 'hidden') {
+        window.__bluetoothManagerMounted = false;
+      }
+    };
+  }, []);
+
+  // Esse efeito lida com mudanças de visibilidade da página
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('Página visível novamente, garantindo que a conexão Bluetooth está mantida');
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
@@ -75,5 +99,12 @@ const BluetoothManager: React.FC = () => {
     </div>
   );
 };
+
+// Declare global property for TypeScript
+declare global {
+  interface Window {
+    __bluetoothManagerMounted?: boolean;
+  }
+}
 
 export default BluetoothManager;

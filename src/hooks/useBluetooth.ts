@@ -34,25 +34,31 @@ export const useBluetooth = (): BluetoothHook => {
         await initializeBluetooth();
         
         // Tentar reconectar ao último dispositivo
-        if (lastConnectedDevice) {
-          console.log('Tentando reconectar ao último dispositivo:', lastConnectedDevice.device.name || lastConnectedDevice.device.deviceId);
-          tryAutoReconnect(lastConnectedDevice, setConnectedDevice);
+        const savedDeviceJson = localStorage.getItem('lastConnectedDevice');
+        if (savedDeviceJson) {
+          try {
+            const device = JSON.parse(savedDeviceJson) as ScanResult;
+            setLastConnectedDevice(device);
+            console.log('Tentando reconectar ao último dispositivo:', device.device.name || device.device.deviceId);
+            tryAutoReconnect(device, setConnectedDevice);
+          } catch (e) {
+            console.error('Erro ao restaurar o último dispositivo:', e);
+          }
         }
       }
     };
     
     setup();
 
-    // Não faça limpeza ao mudar de aba, apenas ao desmontar o componente completamente
+    // Não desconecte ao mudar de aba, apenas ao desmontar o componente completamente
     return () => {
-      if (!isBrowserEnvironment && connectedDevice) {
-        // Desconectar apenas se o app estiver fechando, não quando mudar de aba
-        document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'hidden') {
-            // Não desconectar quando o app for para background
-            console.log('App em background, mantendo conexão');
-          }
-        });
+      // Verificar se o componente BluetoothManager ainda está montado
+      // ou se apenas a página está mudando de visibilidade
+      if (!window.__bluetoothManagerMounted && !isBrowserEnvironment && connectedDevice) {
+        console.log('Componente completamente desmontado, desconectando Bluetooth');
+        cleanupBluetoothConnection(connectedDevice.device.deviceId);
+      } else {
+        console.log('Mantendo conexão Bluetooth ativa mesmo ao mudar de aba');
       }
     };
   }, [connectedDevice, isBrowserEnvironment, lastConnectedDevice]);
@@ -61,6 +67,12 @@ export const useBluetooth = (): BluetoothHook => {
   useEffect(() => {
     if (connectedDevice) {
       setLastConnectedDevice(connectedDevice);
+      // Salvar no localStorage para autoconexão futura
+      try {
+        localStorage.setItem('lastConnectedDevice', JSON.stringify(connectedDevice));
+      } catch (e) {
+        console.error('Erro ao salvar dispositivo conectado:', e);
+      }
     }
   }, [connectedDevice]);
 
