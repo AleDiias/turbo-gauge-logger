@@ -110,8 +110,26 @@ export const connectToBluetoothDevice = async (
       });
     }
     
-    await BleClient.connect(device.device.deviceId);
+    await BleClient.connect(device.device.deviceId, (deviceId) => {
+      console.log(`Dispositivo desconectado: ${deviceId}`);
+      setConnectedDevice(null);
+      
+      // Tentar reconectar automaticamente quando desconectar inesperadamente
+      setTimeout(() => {
+        tryAutoReconnect(device, setConnectedDevice);
+      }, 2000);
+    });
+    
     setConnectedDevice(device);
+    
+    // Salvar o dispositivo para auto-reconexão posterior
+    localStorage.setItem('lastConnectedDeviceId', device.device.deviceId);
+    try {
+      localStorage.setItem('lastConnectedDevice', JSON.stringify(device));
+    } catch (err) {
+      console.error('Não foi possível salvar o dispositivo completo:', err);
+    }
+    
     toast({
       title: "Conectado",
       description: `Conectado a ${device.device.name || device.device.deviceId}`,
@@ -126,6 +144,47 @@ export const connectToBluetoothDevice = async (
   }
 };
 
+// Try to reconnect to the last connected device
+export const tryAutoReconnect = async (
+  device: ScanResult,
+  setConnectedDevice: (device: ScanResult | null) => void
+): Promise<void> => {
+  try {
+    console.log('Tentando reconectar a:', device.device.name || device.device.deviceId);
+    
+    // Verificar se o dispositivo ainda está disponível
+    const isAvailable = await BleClient.requestDevice({
+      services: [],
+      optionalServices: [],
+      namePrefix: device.device.name || undefined,
+    }).then(() => true).catch(() => false);
+    
+    if (!isAvailable) {
+      console.log('Dispositivo não está disponível para reconexão');
+      return;
+    }
+    
+    // Tentar conectar
+    await BleClient.connect(device.device.deviceId, (deviceId) => {
+      console.log(`Dispositivo desconectado: ${deviceId}`);
+      setConnectedDevice(null);
+      
+      // Tentar reconectar novamente quando desconectar
+      setTimeout(() => {
+        tryAutoReconnect(device, setConnectedDevice);
+      }, 2000);
+    });
+    
+    setConnectedDevice(device);
+    toast({
+      title: "Reconectado",
+      description: `Reconectado a ${device.device.name || device.device.deviceId}`,
+    });
+  } catch (error) {
+    console.error('Erro ao reconectar ao dispositivo:', error);
+  }
+};
+
 // Disconnect from a real Bluetooth device
 export const disconnectFromBluetoothDevice = async (
   deviceId: string,
@@ -134,6 +193,11 @@ export const disconnectFromBluetoothDevice = async (
   try {
     await BleClient.disconnect(deviceId);
     setConnectedDevice(null);
+    
+    // Limpar o dispositivo salvo ao desconectar explicitamente
+    localStorage.removeItem('lastConnectedDeviceId');
+    localStorage.removeItem('lastConnectedDevice');
+    
     toast({
       title: "Desconectado",
       description: "Dispositivo desconectado com sucesso",
@@ -179,8 +243,9 @@ export const cleanupBluetoothConnection = async (deviceId: string | null): Promi
   if (!deviceId) return;
   
   try {
-    await BleClient.disconnect(deviceId);
+    // Não desconectar automaticamente ao limpar, apenas liberar recursos
+    console.log('Limpando recursos Bluetooth, mas mantendo a conexão');
   } catch (error) {
-    console.error('Erro ao desconectar:', error);
+    console.error('Erro ao limpar recursos Bluetooth:', error);
   }
 };

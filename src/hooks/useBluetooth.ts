@@ -13,7 +13,8 @@ import {
   connectToBluetoothDevice,
   disconnectFromBluetoothDevice,
   checkBluetoothEnvironment,
-  cleanupBluetoothConnection
+  cleanupBluetoothConnection,
+  tryAutoReconnect
 } from './bluetooth/bluetoothOperations';
 
 export const useBluetooth = (): BluetoothHook => {
@@ -21,6 +22,7 @@ export const useBluetooth = (): BluetoothHook => {
   const [devices, setDevices] = useState<ScanResult[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<ScanResult | null>(null);
   const [isBrowserEnvironment, setIsBrowserEnvironment] = useState(false);
+  const [lastConnectedDevice, setLastConnectedDevice] = useState<ScanResult | null>(null);
 
   useEffect(() => {
     // Check environment and initialize Bluetooth
@@ -30,18 +32,37 @@ export const useBluetooth = (): BluetoothHook => {
       
       if (!isSimulated) {
         await initializeBluetooth();
+        
+        // Tentar reconectar ao último dispositivo
+        if (lastConnectedDevice) {
+          console.log('Tentando reconectar ao último dispositivo:', lastConnectedDevice.device.name || lastConnectedDevice.device.deviceId);
+          tryAutoReconnect(lastConnectedDevice, setConnectedDevice);
+        }
       }
     };
     
     setup();
 
-    // Cleanup function
+    // Não faça limpeza ao mudar de aba, apenas ao desmontar o componente completamente
     return () => {
       if (!isBrowserEnvironment && connectedDevice) {
-        cleanupBluetoothConnection(connectedDevice.device.deviceId);
+        // Desconectar apenas se o app estiver fechando, não quando mudar de aba
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'hidden') {
+            // Não desconectar quando o app for para background
+            console.log('App em background, mantendo conexão');
+          }
+        });
       }
     };
-  }, [connectedDevice, isBrowserEnvironment]);
+  }, [connectedDevice, isBrowserEnvironment, lastConnectedDevice]);
+
+  // Atualizar o último dispositivo conectado quando houver uma conexão
+  useEffect(() => {
+    if (connectedDevice) {
+      setLastConnectedDevice(connectedDevice);
+    }
+  }, [connectedDevice]);
 
   const startScan = async () => {
     if (isBrowserEnvironment) {

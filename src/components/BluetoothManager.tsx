@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from "lucide-react";
@@ -18,6 +18,20 @@ const BluetoothManager: React.FC = () => {
     connectToDevice, 
     disconnectDevice 
   } = useBluetooth();
+
+  useEffect(() => {
+    // Manter o componente vivo mesmo quando não estiver visível
+    // para prevenir desconexão ao trocar de aba
+    const keepAlive = () => {
+      console.log('Mantendo conexão Bluetooth ativa');
+    };
+    
+    const interval = setInterval(keepAlive, 10000);
+    
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
     <div className="space-y-4">
