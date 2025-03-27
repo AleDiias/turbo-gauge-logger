@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BluetoothLe } from '@capacitor-community/bluetooth-le';
+import { useBluetoothStore } from '../stores/bluetoothStore';
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
 
 interface Device {
   deviceId: string;
@@ -14,72 +14,51 @@ interface Device {
 }
 
 export function BluetoothScanner() {
-  const [devices, setDevices] = useState<Device[]>([]);
   const [isScanning, setIsScanning] = useState(false);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const { connect, disconnect, isConnected, deviceId } = useBluetoothStore();
   const { toast } = useToast();
 
-  const isELM327Device = (device: any): boolean => {
-    // Verifica se o nome do dispositivo contém "ELM327" ou "OBDII"
-    const name = device.name?.toLowerCase() || '';
-    return name.includes('elm327') || name.includes('obdii');
+  const isELM327Device = (name: string): boolean => {
+    const elm327Identifiers = ['ELM327', 'OBDII', 'OBD2', 'OBD-II'];
+    return elm327Identifiers.some(identifier => 
+      name.toLowerCase().includes(identifier.toLowerCase())
+    );
   };
 
   const startScan = async () => {
     try {
       setIsScanning(true);
       setDevices([]);
-
-      // Verifica se o Bluetooth está habilitado
-      const isEnabled = await BluetoothLe.isEnabled();
-      if (!isEnabled) {
-        toast({
-          title: "Bluetooth Desativado",
-          description: "Por favor, ative o Bluetooth nas configurações do seu dispositivo.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Inicia a descoberta de dispositivos
-      await BluetoothLe.startLEScan({
+      
+      await BluetoothLe.initialize();
+      await BluetoothLe.requestLEScan({
         allowDuplicates: true,
-        scanMode: 2, // SCAN_MODE_LOW_LATENCY
+        scanMode: 2,
       });
 
-      // Listener para dispositivos descobertos
       BluetoothLe.addListener('discovered', (result) => {
         const device = result.device;
-        if (device) {
-          setDevices(prevDevices => {
-            // Evita duplicatas
-            if (prevDevices.some(d => d.deviceId === device.deviceId)) {
-              return prevDevices;
-            }
-            return [...prevDevices, {
-              deviceId: device.deviceId,
-              name: device.name || 'Dispositivo Desconhecido',
-              rssi: device.rssi || 0,
-              isELM327: isELM327Device(device)
-            }];
-          });
+        if (device.name && !devices.some(d => d.deviceId === device.deviceId)) {
+          const isELM327 = isELM327Device(device.name);
+          setDevices(prev => [...prev, {
+            deviceId: device.deviceId,
+            name: device.name,
+            rssi: device.rssi || 0,
+            isELM327
+          }]);
         }
       });
 
-      // Listener para erros
-      BluetoothLe.addListener('scanFailed', (error) => {
-        console.error('Erro na varredura:', error);
-        toast({
-          title: "Erro na Varredura",
-          description: "Não foi possível realizar a varredura de dispositivos.",
-          variant: "destructive",
-        });
+      toast({
+        title: "Busca Iniciada",
+        description: "Procurando por dispositivos ELM327...",
       });
-
     } catch (error) {
-      console.error('Erro ao iniciar varredura:', error);
+      console.error('Erro ao iniciar scan:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível iniciar a varredura de dispositivos.",
+        description: "Não foi possível iniciar a busca por dispositivos.",
         variant: "destructive",
       });
     }
@@ -89,40 +68,45 @@ export function BluetoothScanner() {
     try {
       await BluetoothLe.stopLEScan();
       setIsScanning(false);
+      
+      if (devices.length === 0) {
+        toast({
+          title: "Busca Concluída",
+          description: "Nenhum dispositivo ELM327 encontrado.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Busca Concluída",
+          description: `${devices.length} dispositivo(s) encontrado(s).`,
+        });
+      }
     } catch (error) {
-      console.error('Erro ao parar varredura:', error);
+      console.error('Erro ao parar scan:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível parar a varredura de dispositivos.",
+        description: "Não foi possível parar a busca por dispositivos.",
         variant: "destructive",
       });
     }
   };
 
-  const connectToDevice = async (device: Device) => {
-    try {
-      if (!device.isELM327) {
-        toast({
-          title: "Dispositivo não compatível",
-          description: "Este dispositivo não é um ELM327. Por favor, selecione um dispositivo ELM327 ou OBDII.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      await BluetoothLe.connect({
-        deviceId: device.deviceId,
-        timeout: 10000,
+  const handleConnect = async (device: Device) => {
+    if (!device.isELM327) {
+      toast({
+        title: "Dispositivo Incompatível",
+        description: "Este dispositivo não é um ELM327. Por favor, selecione um dispositivo ELM327.",
+        variant: "destructive",
       });
+      return;
+    }
 
+    try {
+      await connect(device.deviceId, device.name);
       toast({
         title: "Conectado",
-        description: `Conectado com sucesso ao dispositivo ${device.name}`,
+        description: `Conectado ao dispositivo ${device.name}`,
       });
-
-      // Aqui você pode adicionar a lógica para iniciar a comunicação com o dispositivo
-      // Por exemplo, enviar comandos de inicialização
-
     } catch (error) {
       console.error('Erro ao conectar:', error);
       toast({
@@ -133,73 +117,91 @@ export function BluetoothScanner() {
     }
   };
 
+  const handleDisconnect = async () => {
+    try {
+      await disconnect();
+      toast({
+        title: "Desconectado",
+        description: "Dispositivo desconectado com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao desconectar:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível desconectar do dispositivo.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     return () => {
-      stopScan();
+      if (isScanning) {
+        stopScan();
+      }
     };
   }, []);
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Scanner Bluetooth</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <Button
-            onClick={isScanning ? stopScan : startScan}
-            className="w-full"
-            disabled={isScanning}
+    <div className="space-y-4">
+      <div className="flex justify-center gap-2">
+        <Button 
+          onClick={isScanning ? stopScan : startScan}
+          disabled={isConnected}
+        >
+          {isScanning ? 'Parar Busca' : 'Buscar Dispositivos'}
+        </Button>
+        {isConnected && (
+          <Button 
+            onClick={handleDisconnect}
+            variant="destructive"
           >
-            {isScanning ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Escaneando...
-              </>
-            ) : (
-              'Iniciar Varredura'
-            )}
+            Desconectar
           </Button>
+        )}
+      </div>
 
-          <ScrollArea className="h-[300px] w-full rounded-md border p-4">
-            {devices.length === 0 ? (
-              <p className="text-center text-muted-foreground">
-                {isScanning
-                  ? 'Procurando dispositivos...'
-                  : 'Nenhum dispositivo encontrado'}
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {devices.map((device) => (
-                  <div
-                    key={device.deviceId}
-                    className="flex items-center justify-between p-2 rounded-lg border hover:bg-accent cursor-pointer"
-                    onClick={() => connectToDevice(device)}
-                  >
-                    <div>
-                      <p className="font-medium">{device.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Força do sinal: {device.rssi} dBm
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {device.isELM327 ? (
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                          ELM327
-                        </span>
-                      ) : (
-                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                          Outro
-                        </span>
-                      )}
-                    </div>
+      <Card className="p-4">
+        <ScrollArea className="h-[300px]">
+          <div className="space-y-2">
+            {devices.map((device) => (
+              <div
+                key={device.deviceId}
+                className={`p-4 rounded-lg border ${
+                  device.isELM327 
+                    ? 'border-green-500 bg-green-50' 
+                    : 'border-red-500 bg-red-50'
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="font-medium">{device.name}</h3>
+                    <p className="text-sm text-gray-500">
+                      {device.isELM327 ? 'Dispositivo ELM327' : 'Dispositivo não compatível'}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Força do sinal: {device.rssi} dBm
+                    </p>
                   </div>
-                ))}
+                  {device.isELM327 && (
+                    <Button
+                      onClick={() => handleConnect(device)}
+                      disabled={isConnected}
+                    >
+                      {deviceId === device.deviceId ? 'Conectado' : 'Conectar'}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+            {!isScanning && devices.length === 0 && (
+              <div className="text-center text-gray-500 py-4">
+                Nenhum dispositivo encontrado
               </div>
             )}
-          </ScrollArea>
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+        </ScrollArea>
+      </Card>
+    </div>
   );
 } 
