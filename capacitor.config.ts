@@ -1,12 +1,11 @@
-
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.4f3a426f003c482d84c59d4f1f612bef',
-  appName: 'turbo-gauge-logger',
+  appId: 'com.asgardturbo.app',
+  appName: 'Asgard Turbo',
   webDir: 'dist',
   server: {
-    url: "https://4f3a426f-003c-482d-84c5-9d4f1f612bef.lovableproject.com?forceHideBadge=true",
+    url: "https://turbo.asgardai.com.br",
     cleartext: true
   },
   plugins: {
