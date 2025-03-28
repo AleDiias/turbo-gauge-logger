@@ -30,6 +30,26 @@ export const useBluetooth = (): BluetoothHook => {
     setIsScanning(false);
   }, []);
 
+  // Função para verificar dispositivo conectado
+  const checkConnectedDevice = useCallback(async () => {
+    try {
+      const savedDevice = localStorage.getItem('connectedDevice');
+      if (savedDevice) {
+        const device = JSON.parse(savedDevice) as ScanResult;
+        const isEnabled = await BleClient.isEnabled();
+        
+        if (isEnabled) {
+          setConnectedDevice(device);
+          return;
+        }
+      }
+      setConnectedDevice(null);
+    } catch (e) {
+      console.log('Erro ao verificar dispositivo conectado:', e);
+      setConnectedDevice(null);
+    }
+  }, []);
+
   // Efeito para inicialização
   useEffect(() => {
     const setup = async () => {
@@ -38,19 +58,40 @@ export const useBluetooth = (): BluetoothHook => {
       
       if (!isSimulated) {
         await initializeBluetooth();
+        await checkConnectedDevice();
       }
     };
     
     setup();
-  }, []);
+  }, [checkConnectedDevice]);
 
   // Efeito para gerenciar o estado de conexão
   useEffect(() => {
     if (connectedDevice) {
       forceStopScan();
       setDevices([]);
+      // Salvar dispositivo conectado
+      try {
+        localStorage.setItem('connectedDevice', JSON.stringify(connectedDevice));
+      } catch (e) {
+        console.log('Erro ao salvar dispositivo conectado:', e);
+      }
     }
   }, [connectedDevice, forceStopScan]);
+
+  // Efeito para verificar conexão ao voltar para o app
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkConnectedDevice();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [checkConnectedDevice]);
 
   const startScan = async () => {
     if (connectedDevice) {
@@ -89,6 +130,8 @@ export const useBluetooth = (): BluetoothHook => {
     await disconnectFromBluetoothDevice(connectedDevice.device.deviceId, setConnectedDevice);
     await forceStopScan();
     setDevices([]);
+    // Limpar dispositivo salvo
+    localStorage.removeItem('connectedDevice');
   };
 
   return {
