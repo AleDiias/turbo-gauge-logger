@@ -12,7 +12,7 @@ const ScanningStatus: React.FC<ScanningStatusProps> = ({
   devicesCount,
   connectedDevice 
 }) => {
-  // Se já estiver conectado, não mostrar NADA
+  // Nunca mostrar nada se houver um dispositivo conectado
   if (connectedDevice) {
     return null;
   }
@@ -35,14 +35,18 @@ const ScanningStatus: React.FC<ScanningStatusProps> = ({
     );
   }
 
-  // Se estiver escaneando E não tiver dispositivo conectado, mostrar mensagem de busca
+  // Se estiver escaneando e não houver dispositivo conectado, mostrar mensagem de busca
   if (isScanning && !connectedDevice) {
     return (
-      <div className="text-center p-4 bg-slate-800/50 rounded-lg">
-        <p className="text-slate-300">Procurando por dispositivos Bluetooth...</p>
-        <p className="text-slate-400 text-sm mt-1">
-          Certifique-se de que seu adaptador OBD-II está ligado e próximo.
-        </p>
+      <div className="fixed inset-0 flex items-center justify-center bg-black/50">
+        <div className="bg-slate-800 p-6 rounded-lg shadow-lg text-center">
+          <p className="text-slate-300 text-lg font-semibold mb-2">
+            Procurando por dispositivos Bluetooth...
+          </p>
+          <p className="text-slate-400 text-sm">
+            Certifique-se de que seu adaptador OBD-II está ligado e próximo.
+          </p>
+        </div>
       </div>
     );
   }

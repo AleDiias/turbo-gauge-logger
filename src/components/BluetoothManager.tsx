@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from "lucide-react";
@@ -17,40 +17,6 @@ const BluetoothManager: React.FC = () => {
     connectToDevice, 
     disconnectDevice 
   } = useBluetooth();
-
-  // Efeito para manter a conexão Bluetooth ativa
-  useEffect(() => {
-    const keepAlive = () => {
-      if (connectedDevice) {
-        console.log('Mantendo conexão Bluetooth ativa');
-      }
-    };
-    
-    const interval = setInterval(keepAlive, 5000);
-    window.__bluetoothManagerMounted = true;
-    
-    return () => {
-      clearInterval(interval);
-      if (document.visibilityState !== 'hidden') {
-        window.__bluetoothManagerMounted = false;
-      }
-    };
-  }, [connectedDevice]);
-
-  // Efeito para lidar com mudanças de visibilidade
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && connectedDevice) {
-        console.log('Página visível novamente, garantindo que a conexão Bluetooth está mantida');
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [connectedDevice]);
 
   // Renderização condicional dos componentes
   const renderDevicesList = () => {
@@ -101,12 +67,5 @@ const BluetoothManager: React.FC = () => {
     </div>
   );
 };
-
-// Declare global property for TypeScript
-declare global {
-  interface Window {
-    __bluetoothManagerMounted?: boolean;
-  }
-}
 
 export default BluetoothManager;
