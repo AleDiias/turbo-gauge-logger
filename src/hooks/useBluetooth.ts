@@ -11,9 +11,7 @@ import {
   startBluetoothScan,
   connectToBluetoothDevice,
   disconnectFromBluetoothDevice,
-  checkBluetoothEnvironment,
-  cleanupBluetoothConnection,
-  tryAutoReconnect
+  checkBluetoothEnvironment
 } from './bluetooth/bluetoothOperations';
 
 export const useBluetooth = (): BluetoothHook => {
@@ -21,7 +19,6 @@ export const useBluetooth = (): BluetoothHook => {
   const [devices, setDevices] = useState<ScanResult[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<ScanResult | null>(null);
   const [isBrowserEnvironment, setIsBrowserEnvironment] = useState(false);
-  const [lastConnectedDevice, setLastConnectedDevice] = useState<ScanResult | null>(null);
 
   // Função para forçar parada do scanning
   const forceStopScan = useCallback(async () => {
@@ -33,7 +30,7 @@ export const useBluetooth = (): BluetoothHook => {
     setIsScanning(false);
   }, []);
 
-  // Efeito para inicialização e limpeza
+  // Efeito para inicialização
   useEffect(() => {
     const setup = async () => {
       const isSimulated = await checkBluetoothEnvironment();
@@ -41,66 +38,19 @@ export const useBluetooth = (): BluetoothHook => {
       
       if (!isSimulated) {
         await initializeBluetooth();
-        
-        const savedDeviceJson = localStorage.getItem('lastConnectedDevice');
-        if (savedDeviceJson) {
-          try {
-            const device = JSON.parse(savedDeviceJson) as ScanResult;
-            setLastConnectedDevice(device);
-            console.log('Tentando reconectar ao último dispositivo:', device.device.name || device.device.deviceId);
-            await tryAutoReconnect(device, setConnectedDevice, setIsScanning);
-          } catch (e) {
-            console.error('Erro ao restaurar o último dispositivo:', e);
-          }
-        }
       }
     };
     
     setup();
-
-    // Não desconectar ao sair da aplicação
-    return () => {
-      if (connectedDevice) {
-        console.log('Mantendo conexão Bluetooth ativa');
-      }
-    };
   }, []);
 
   // Efeito para gerenciar o estado de conexão
   useEffect(() => {
     if (connectedDevice) {
-      setLastConnectedDevice(connectedDevice);
-      forceStopScan(); // Garantir que o scanning seja interrompido
-      setDevices([]); // Limpar lista de dispositivos quando conectado
-      try {
-        localStorage.setItem('lastConnectedDevice', JSON.stringify(connectedDevice));
-      } catch (e) {
-        console.error('Erro ao salvar dispositivo conectado:', e);
-      }
+      forceStopScan();
+      setDevices([]);
     }
   }, [connectedDevice, forceStopScan]);
-
-  // Efeito para parar o scanning quando um dispositivo for conectado
-  useEffect(() => {
-    if (connectedDevice && isScanning) {
-      forceStopScan();
-    }
-  }, [connectedDevice, isScanning, forceStopScan]);
-
-  // Efeito para manter a conexão ao mudar de aba
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && connectedDevice) {
-        console.log('Página visível novamente, verificando conexão Bluetooth');
-        tryAutoReconnect(connectedDevice, setConnectedDevice, setIsScanning);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [connectedDevice]);
 
   const startScan = async () => {
     if (connectedDevice) {
