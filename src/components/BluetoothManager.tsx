@@ -2,8 +2,9 @@
 import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Info } from "lucide-react";
+import { Info, Bluetooth } from "lucide-react";
 import { useBluetooth } from '@/hooks/useBluetooth';
+import { useOBDData } from '@/hooks/useOBDData';
 import ConnectedDeviceCard from './bluetooth/ConnectedDeviceCard';
 import DevicesList from './bluetooth/DevicesList';
 import ScanningStatus from './bluetooth/ScanningStatus';
@@ -18,13 +19,16 @@ const BluetoothManager: React.FC = () => {
     connectToDevice, 
     disconnectDevice 
   } = useBluetooth();
+  
+  const { isInitialized } = useOBDData();
 
   // Log connection status for debugging
   useEffect(() => {
     console.log('Estado de conexão Bluetooth:', connectedDevice ? 
       `Conectado a ${connectedDevice.device.name || connectedDevice.device.deviceId}` : 
       'Não conectado');
-  }, [connectedDevice]);
+    console.log('OBD inicializado:', isInitialized ? 'Sim' : 'Não');
+  }, [connectedDevice, isInitialized]);
 
   // Renderização condicional dos componentes
   const renderDevicesList = () => {
@@ -48,7 +52,10 @@ const BluetoothManager: React.FC = () => {
       )}
       
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Conexão Bluetooth</h2>
+        <h2 className="text-xl font-semibold flex items-center">
+          <Bluetooth className="mr-2 h-5 w-5" />
+          Conexão Bluetooth
+        </h2>
         {!isScanning && !connectedDevice ? (
           <Button onClick={startScan} disabled={isScanning || !!connectedDevice}>
             Buscar Dispositivos
@@ -60,6 +67,7 @@ const BluetoothManager: React.FC = () => {
         <ConnectedDeviceCard 
           device={connectedDevice} 
           onDisconnect={disconnectDevice} 
+          isOBDInitialized={isInitialized}
         />
       )}
 
