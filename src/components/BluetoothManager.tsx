@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Button } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info, Bluetooth } from "lucide-react";
 import { useBluetooth } from '@/hooks/useBluetooth';
