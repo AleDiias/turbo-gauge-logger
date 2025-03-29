@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info, Bluetooth } from "lucide-react";
 import { useBluetooth } from '@/hooks/useBluetooth';
@@ -20,7 +20,11 @@ const BluetoothManager: React.FC = () => {
     disconnectDevice 
   } = useBluetooth();
   
-  const { isInitialized } = useOBDData();
+  const { 
+    isInitialized, 
+    isInitializing, 
+    initializationError 
+  } = useOBDData();
 
   // Log connection status for debugging
   useEffect(() => {
@@ -28,13 +32,20 @@ const BluetoothManager: React.FC = () => {
       `Conectado a ${connectedDevice.device.name || connectedDevice.device.deviceId}` : 
       'Não conectado');
     console.log('OBD inicializado:', isInitialized ? 'Sim' : 'Não');
-  }, [connectedDevice, isInitialized]);
+    console.log('OBD inicializando:', isInitializing ? 'Sim' : 'Não');
+    console.log('Erro na inicialização:', initializationError ? 'Sim' : 'Não');
+  }, [connectedDevice, isInitialized, isInitializing, initializationError]);
 
   // Renderização condicional dos componentes
   const renderDevicesList = () => {
     if (connectedDevice) return null;
     if (devices.length === 0) return null;
     return <DevicesList devices={devices} onConnect={connectToDevice} />;
+  };
+
+  const handleDisconnect = async () => {
+    console.log('Iniciando desconexão via interface');
+    await disconnectDevice();
   };
 
   return (
@@ -66,8 +77,10 @@ const BluetoothManager: React.FC = () => {
       {connectedDevice && (
         <ConnectedDeviceCard 
           device={connectedDevice} 
-          onDisconnect={disconnectDevice} 
+          onDisconnect={handleDisconnect} 
           isOBDInitialized={isInitialized}
+          isInitializing={isInitializing}
+          initializationError={initializationError}
         />
       )}
 

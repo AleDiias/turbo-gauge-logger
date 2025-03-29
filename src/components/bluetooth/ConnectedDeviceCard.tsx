@@ -3,18 +3,22 @@ import React from 'react';
 import { ScanResult } from '@capacitor-community/bluetooth-le';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Smartphone, CheckCircle2, Loader2 } from "lucide-react";
+import { Smartphone, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 
 interface ConnectedDeviceCardProps {
   device: ScanResult;
   onDisconnect: () => Promise<void>;
   isOBDInitialized?: boolean;
+  isInitializing?: boolean;
+  initializationError?: boolean;
 }
 
 const ConnectedDeviceCard: React.FC<ConnectedDeviceCardProps> = ({
   device,
   onDisconnect,
-  isOBDInitialized = false
+  isOBDInitialized = false,
+  isInitializing = true,
+  initializationError = false
 }) => {
   const deviceName = device.device.name || "Dispositivo Desconhecido";
   const deviceId = device.device.deviceId;
@@ -40,16 +44,29 @@ const ConnectedDeviceCard: React.FC<ConnectedDeviceCardProps> = ({
                     <CheckCircle2 className="h-4 w-4 mr-1" />
                     <span>OBD Inicializado</span>
                   </div>
-                ) : (
+                ) : initializationError ? (
+                  <div className="text-red-500 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    <span>Falha na inicialização</span>
+                  </div>
+                ) : isInitializing ? (
                   <div className="text-yellow-500 flex items-center">
                     <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                     <span>Inicializando OBD...</span>
+                  </div>
+                ) : (
+                  <div className="text-slate-500 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    <span>Aguardando veículo</span>
                   </div>
                 )}
               </div>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={onDisconnect}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onDisconnect}>
             Desconectar
           </Button>
         </div>

@@ -8,15 +8,34 @@ import dataManager from './obd/dataManager';
  */
 class OBDService {
   async connect(deviceId: string): Promise<boolean> {
-    const connected = await connectionManager.connect(deviceId);
-    if (connected) {
-      await commandManager.initializeOBD();
+    try {
+      console.log('OBDService: Iniciando conexão com dispositivo', deviceId);
+      const connected = await connectionManager.connect(deviceId);
+      
+      if (connected) {
+        console.log('OBDService: Dispositivo conectado, inicializando OBD...');
+        await commandManager.initializeOBD();
+        console.log('OBDService: OBD inicializado com sucesso');
+        return true;
+      } else {
+        console.log('OBDService: Falha na conexão com o dispositivo');
+        return false;
+      }
+    } catch (error) {
+      console.error('OBDService: Erro durante processo de conexão:', error);
+      return false;
     }
-    return connected;
   }
 
   async disconnect(): Promise<void> {
-    await connectionManager.disconnect();
+    try {
+      console.log('OBDService: Desconectando');
+      await connectionManager.disconnect();
+      console.log('OBDService: Desconectado com sucesso');
+    } catch (error) {
+      console.error('OBDService: Erro ao desconectar:', error);
+      throw error;
+    }
   }
 
   // Engine data methods
@@ -56,6 +75,14 @@ class OBDService {
   // Diagnostic methods
   async getDTCCount(): Promise<number | null> {
     return await dataManager.getDTCCount();
+  }
+  
+  async getDiagnosticTroubleCodes(): Promise<string[]> {
+    return await dataManager.getDiagnosticTroubleCodes();
+  }
+  
+  async clearDiagnosticTroubleCodes(): Promise<boolean> {
+    return await dataManager.clearDiagnosticTroubleCodes();
   }
 }
 

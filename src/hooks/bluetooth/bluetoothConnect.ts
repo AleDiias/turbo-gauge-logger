@@ -1,6 +1,7 @@
 
 import { BleClient, ScanResult } from "@capacitor-community/bluetooth-le";
 import { toast } from "@/components/ui/use-toast";
+import OBDService from '@/services/OBDService';
 
 // Connect to a real Bluetooth device
 export const connectToBluetoothDevice = async (
@@ -159,7 +160,21 @@ export const disconnectFromBluetoothDevice = async (
 ): Promise<void> => {
   try {
     console.log(`Desconectando do dispositivo: ${deviceId}`);
+    
+    // First disconnect OBD service
+    try {
+      console.log('Desconectando serviço OBD');
+      await OBDService.disconnect();
+      console.log('Serviço OBD desconectado com sucesso');
+    } catch (obdError) {
+      console.error('Erro ao desconectar serviço OBD:', obdError);
+      // Continue with BLE disconnect even if OBD disconnect fails
+    }
+    
+    // Then disconnect BLE
     await BleClient.disconnect(deviceId);
+    console.log('Dispositivo Bluetooth desconectado com sucesso');
+    
     setConnectedDevice(null);
     
     // Limpar o dispositivo salvo ao desconectar explicitamente
@@ -173,6 +188,13 @@ export const disconnectFromBluetoothDevice = async (
     });
   } catch (error) {
     console.error('Erro ao desconectar do dispositivo:', error);
+    
+    // Force clean state even if disconnect failed
+    setConnectedDevice(null);
+    localStorage.removeItem('lastConnectedDeviceId');
+    localStorage.removeItem('lastConnectedDevice');
+    localStorage.removeItem('connectedDevice');
+    
     toast({
       title: "Erro de Desconexão",
       description: "Falha ao desconectar do dispositivo",

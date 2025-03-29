@@ -24,6 +24,8 @@ export function useOBDData() {
   const { connectedDevice } = useBluetooth();
   const [data, setData] = useState<OBDData>(DEFAULT_DATA);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [initializationError, setInitializationError] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
   const [dtcCount, setDtcCount] = useState<number | null>(null);
   const [isReadingCodes, setIsReadingCodes] = useState(false);
@@ -32,19 +34,42 @@ export function useOBDData() {
   // Inicializar a conexão OBD quando o dispositivo estiver conectado
   useEffect(() => {
     const initializeOBD = async () => {
-      if (connectedDevice && !isInitialized) {
+      if (connectedDevice && !isInitialized && !isInitializing) {
         try {
           const deviceId = connectedDevice.device.deviceId;
-          console.log('Inicializando conexão OBD para o dispositivo:', deviceId);
+          console.log('Iniciando processo de inicialização OBD para o dispositivo:', deviceId);
+          
+          setIsInitializing(true);
+          setInitializationError(false);
+          
+          // Timeout para detectar falhas na inicialização
+          const timeoutId = setTimeout(() => {
+            if (isInitializing && !isInitialized) {
+              console.log('Timeout na inicialização OBD');
+              setInitializationError(true);
+              setIsInitializing(false);
+            }
+          }, 10000); // 10 segundos de timeout
           
           const connected = await OBDService.connect(deviceId);
+          clearTimeout(timeoutId);
+          
           if (connected) {
+            console.log('OBD inicializado com sucesso');
             setIsInitialized(true);
+            setIsInitializing(false);
+            setInitializationError(false);
+            
             toast({
               title: "OBD Inicializado",
               description: "Conexão OBD estabelecida com sucesso",
             });
           } else {
+            console.log('Falha na inicialização OBD');
+            setIsInitialized(false);
+            setIsInitializing(false);
+            setInitializationError(true);
+            
             toast({
               title: "Falha na Inicialização OBD",
               description: "Não foi possível inicializar a conexão OBD",
@@ -53,6 +78,10 @@ export function useOBDData() {
           }
         } catch (error) {
           console.error('Erro ao inicializar OBD:', error);
+          setIsInitialized(false);
+          setIsInitializing(false);
+          setInitializationError(true);
+          
           toast({
             title: "Erro de Conexão OBD",
             description: "Ocorreu um erro ao conectar ao adaptador OBD",
@@ -61,15 +90,28 @@ export function useOBDData() {
         }
       }
       
-      if (!connectedDevice && isInitialized) {
-        setIsInitialized(false);
-        setData(DEFAULT_DATA);
-        setIsPolling(false);
+      if (!connectedDevice) {
+        if (isInitialized || isInitializing) {
+          console.log('Dispositivo desconectado, resetando estado OBD');
+          // Reset OBD state when device disconnects
+          setIsInitialized(false);
+          setIsInitializing(false);
+          setInitializationError(false);
+          setData(DEFAULT_DATA);
+          setIsPolling(false);
+          
+          // Ensure OBD service is disconnected
+          try {
+            await OBDService.disconnect();
+          } catch (error) {
+            console.error('Erro ao desconectar OBD service:', error);
+          }
+        }
       }
     };
 
     initializeOBD();
-  }, [connectedDevice, isInitialized]);
+  }, [connectedDevice, isInitialized, isInitializing]);
 
   // Polling para atualizar dados em tempo real
   useEffect(() => {
@@ -86,6 +128,12 @@ export function useOBDData() {
           const speed = await OBDService.getVehicleSpeed();
           const coolantTemp = await OBDService.getCoolantTemp();
           
+          if (rpm !== null || speed !== null || coolantTemp !== null) {
+            // Se conseguimos obter algum dado, o OBD está respondendo
+            setIsInitialized(true);
+            setInitializationError(false);
+          }
+          
           setData(prev => ({
             ...prev,
             rpm: rpm !== null ? rpm : prev.rpm,
@@ -95,6 +143,7 @@ export function useOBDData() {
           }));
         } catch (error) {
           console.error('Erro ao obter dados OBD:', error);
+          // Não alterar o estado de inicialização aqui, pode ser apenas uma falha temporária
         }
       };
       
@@ -133,12 +182,11 @@ export function useOBDData() {
           diagnosticCodes: []
         }));
       } else {
-        // Implementar a leitura dos códigos específicos aqui
-        // Este é um exemplo simulado, precisaria ser implementado com comandos reais
-        const mockCodes = ["P0171", "P0300"];
+        // Obter os códigos de diagnóstico
+        const codes = await OBDService.getDiagnosticTroubleCodes();
         setData(prev => ({
           ...prev,
-          diagnosticCodes: mockCodes
+          diagnosticCodes: codes
         }));
         
         toast({
@@ -165,19 +213,22 @@ export function useOBDData() {
     setIsClearingCodes(true);
     try {
       // Enviar comando para limpar códigos
-      // Implementação simulada
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const success = await OBDService.clearDiagnosticTroubleCodes();
       
-      setData(prev => ({
-        ...prev,
-        diagnosticCodes: []
-      }));
-      setDtcCount(0);
-      
-      toast({
-        title: "Códigos Limpos",
-        description: "Todos os códigos de falha foram limpos com sucesso",
-      });
+      if (success) {
+        setData(prev => ({
+          ...prev,
+          diagnosticCodes: []
+        }));
+        setDtcCount(0);
+        
+        toast({
+          title: "Códigos Limpos",
+          description: "Todos os códigos de falha foram limpos com sucesso",
+        });
+      } else {
+        throw new Error('Falha ao limpar códigos');
+      }
     } catch (error) {
       console.error('Erro ao limpar códigos de diagnóstico:', error);
       toast({
@@ -193,6 +244,8 @@ export function useOBDData() {
   return {
     data,
     isInitialized,
+    isInitializing,
+    initializationError,
     isReadingCodes,
     isClearingCodes,
     dtcCount,
