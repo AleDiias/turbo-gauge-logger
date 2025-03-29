@@ -1,3 +1,4 @@
+
 import { BleClient, ScanResult } from "@capacitor-community/bluetooth-le";
 import { toast } from "@/components/ui/use-toast";
 
@@ -31,16 +32,20 @@ export const connectToBluetoothDevice = async (
       });
     }
     
+    console.log(`Tentando conectar ao dispositivo: ${device.device.name || device.device.deviceId}`);
+    
+    // Definir o callback de desconexão para tentar reconectar automaticamente
     await BleClient.connect(device.device.deviceId, (deviceId) => {
-      console.log(`Dispositivo desconectado: ${deviceId}`);
-      setConnectedDevice(null);
+      console.log(`Dispositivo desconectado: ${deviceId}, tentando reconectar...`);
       
-      // Tentar reconectar automaticamente quando desconectar inesperadamente
+      // Não atualizar o estado de conexão imediatamente, tentar reconectar primeiro
       setTimeout(() => {
+        // Use o device original para tentar reconectar
         tryAutoReconnect(device, setConnectedDevice, setIsScanning);
-      }, 2000);
+      }, 1000);
     });
     
+    console.log(`Conectado com sucesso ao dispositivo: ${device.device.name || device.device.deviceId}`);
     setConnectedDevice(device);
     
     // Salvar o dispositivo para auto-reconexão posterior
@@ -83,37 +88,67 @@ export const tryAutoReconnect = async (
 
     console.log('Tentando reconectar a:', device.device.name || device.device.deviceId);
     
-    // Verificar se o dispositivo ainda está disponível
-    const isAvailable = await BleClient.requestDevice({
-      services: [],
-      optionalServices: [],
-      namePrefix: device.device.name || undefined,
-    }).then(() => true).catch(() => false);
-    
-    if (!isAvailable) {
-      console.log('Dispositivo não está disponível para reconexão');
+    // Verificar se o Bluetooth está habilitado
+    const isEnabled = await BleClient.isEnabled().catch(() => false);
+    if (!isEnabled) {
+      console.log('Bluetooth não está habilitado, não é possível reconectar');
       return;
     }
     
-    // Tentar conectar
-    await BleClient.connect(device.device.deviceId, (deviceId) => {
-      console.log(`Dispositivo desconectado: ${deviceId}`);
-      setConnectedDevice(null);
+    // Tentar conectar diretamente sem requestDevice
+    try {
+      await BleClient.connect(device.device.deviceId, (deviceId) => {
+        console.log(`Dispositivo desconectado novamente: ${deviceId}`);
+        
+        // Tentar reconectar novamente quando desconectar
+        setTimeout(() => {
+          tryAutoReconnect(device, setConnectedDevice, setIsScanning);
+        }, 2000);
+      });
       
-      // Tentar reconectar novamente quando desconectar
-      setTimeout(() => {
-        tryAutoReconnect(device, setConnectedDevice, setIsScanning);
-      }, 2000);
-    });
-    
-    setConnectedDevice(device);
-    toast({
-      title: "Reconectado",
-      description: `Reconectado a ${device.device.name || device.device.deviceId}`,
-    });
+      console.log('Reconectado com sucesso!');
+      setConnectedDevice(device);
+      
+      toast({
+        title: "Reconectado",
+        description: `Reconectado a ${device.device.name || device.device.deviceId}`,
+      });
+    } catch (error) {
+      console.error('Erro ao reconectar diretamente:', error);
+      console.log('Tentando método alternativo de reconexão...');
+      
+      // Se falhar a conexão direta, tentar o método alternativo com requestDevice
+      try {
+        // Este método só funciona em algumas plataformas
+        const isAvailable = await BleClient.requestDevice({
+          services: [],
+          optionalServices: [],
+          namePrefix: device.device.name || undefined,
+        }).then(() => true).catch(() => false);
+        
+        if (!isAvailable) {
+          console.log('Dispositivo não está disponível para reconexão');
+          return;
+        }
+        
+        await BleClient.connect(device.device.deviceId, (deviceId) => {
+          console.log(`Dispositivo desconectado: ${deviceId}`);
+          setTimeout(() => {
+            tryAutoReconnect(device, setConnectedDevice, setIsScanning);
+          }, 2000);
+        });
+        
+        setConnectedDevice(device);
+        toast({
+          title: "Reconectado",
+          description: `Reconectado a ${device.device.name || device.device.deviceId}`,
+        });
+      } catch (secondError) {
+        console.error('Falha no método alternativo de reconexão:', secondError);
+      }
+    }
   } catch (error) {
     console.error('Erro ao reconectar ao dispositivo:', error);
-    setIsScanning(false);
   }
 };
 
@@ -123,12 +158,14 @@ export const disconnectFromBluetoothDevice = async (
   setConnectedDevice: (device: ScanResult | null) => void
 ): Promise<void> => {
   try {
+    console.log(`Desconectando do dispositivo: ${deviceId}`);
     await BleClient.disconnect(deviceId);
     setConnectedDevice(null);
     
     // Limpar o dispositivo salvo ao desconectar explicitamente
     localStorage.removeItem('lastConnectedDeviceId');
     localStorage.removeItem('lastConnectedDevice');
+    localStorage.removeItem('connectedDevice');
     
     toast({
       title: "Desconectado",

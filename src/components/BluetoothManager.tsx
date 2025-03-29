@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from "lucide-react";
@@ -17,6 +18,13 @@ const BluetoothManager: React.FC = () => {
     connectToDevice, 
     disconnectDevice 
   } = useBluetooth();
+
+  // Log connection status for debugging
+  useEffect(() => {
+    console.log('Estado de conexão Bluetooth:', connectedDevice ? 
+      `Conectado a ${connectedDevice.device.name || connectedDevice.device.deviceId}` : 
+      'Não conectado');
+  }, [connectedDevice]);
 
   // Renderização condicional dos componentes
   const renderDevicesList = () => {
